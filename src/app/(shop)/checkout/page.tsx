@@ -14,7 +14,8 @@ import {
   Phone,
   Mail,
   User,
-  Lock
+  Lock,
+  X
 } from 'lucide-react';
 import { useHydratedStore } from '@/lib/store';
 import { productService } from '@/lib/firebase';
@@ -284,13 +285,20 @@ export default function CheckoutPage() {
             <button
               onClick={() => router.back()}
               className="btn-icon bg-gray-100 text-gray-700 hover:bg-gray-200"
+              aria-label="Go back"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
             <h1 className="font-serif text-xl font-bold text-gray-900">
               Checkout
             </h1>
-            <div className="w-11"></div> {/* Spacer */}
+            <button
+              onClick={() => router.push('/shop')}
+              className="btn-icon bg-gray-100 text-gray-700 hover:bg-gray-200"
+              aria-label="Close checkout"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
         </div>
       </div>

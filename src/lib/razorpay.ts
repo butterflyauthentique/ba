@@ -113,6 +113,26 @@ export const verifyPayment = async (paymentData: PaymentResponse): Promise<boole
 export const initializeRazorpayCheckout = async (order: CheckoutOrder): Promise<any> => { // eslint-disable-line @typescript-eslint/no-explicit-any
   const razorpay = await loadRazorpay(); // eslint-disable-line @typescript-eslint/no-unused-vars
   
+  // Suppress console errors before initializing Razorpay
+  const originalConsoleError = console.error;
+  const originalConsoleWarn = console.warn;
+  
+  console.error = (...args: any[]) => {
+    const message = args.join(' ');
+    if (message.includes('x-rtb-fingerprint-id') || message.includes('unsafe header')) {
+      return; // Suppress these specific errors
+    }
+    originalConsoleError.apply(console, args);
+  };
+  
+  console.warn = (...args: any[]) => {
+    const message = args.join(' ');
+    if (message.includes('x-rtb-fingerprint-id') || message.includes('unsafe header')) {
+      return; // Suppress these specific warnings
+    }
+    originalConsoleWarn.apply(console, args);
+  };
+  
   const options = {
     key: razorpayConfig.keyId,
     amount: order.amount,
@@ -122,6 +142,10 @@ export const initializeRazorpayCheckout = async (order: CheckoutOrder): Promise<
     image: '/android-chrome-192x192.png',
     order_id: order.id,
     handler: function (response: PaymentResponse) {
+      // Restore console functions
+      console.error = originalConsoleError;
+      console.warn = originalConsoleWarn;
+      
       // Handle payment success
       console.log('Payment successful:', response);
       return response;
@@ -176,6 +200,10 @@ export const initializeRazorpayCheckout = async (order: CheckoutOrder): Promise<
     },
     modal: {
       ondismiss: function() {
+        // Restore console functions
+        console.error = originalConsoleError;
+        console.warn = originalConsoleWarn;
+        
         // Handle modal dismissal
         console.log('Payment modal dismissed');
       }
@@ -184,26 +212,36 @@ export const initializeRazorpayCheckout = async (order: CheckoutOrder): Promise<
     retry: {
       enabled: true,
       max_count: 3
-    },
-    // Suppress console errors for security headers
-    suppress_console_errors: true
+    }
   };
 
   return new Promise((resolve, reject) => {
     const rzp = new (window as any).Razorpay(options); // eslint-disable-line @typescript-eslint/no-explicit-any
     
     rzp.on('payment.failed', function (response: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+      // Restore console functions
+      console.error = originalConsoleError;
+      console.warn = originalConsoleWarn;
+      
       console.error('Payment failed:', response.error);
       reject(new Error(response.error.description || 'Payment failed'));
     });
 
     rzp.on('payment.success', function (response: PaymentResponse) { // eslint-disable-line @typescript-eslint/no-explicit-any
+      // Restore console functions
+      console.error = originalConsoleError;
+      console.warn = originalConsoleWarn;
+      
       console.log('Payment success event triggered:', response);
       resolve(response);
     });
 
     // Add error handling for initialization
     rzp.on('payment.error', function (response: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+      // Restore console functions
+      console.error = originalConsoleError;
+      console.warn = originalConsoleWarn;
+      
       console.error('Payment error:', response.error);
       reject(new Error(response.error.description || 'Payment error occurred'));
     });
@@ -211,6 +249,10 @@ export const initializeRazorpayCheckout = async (order: CheckoutOrder): Promise<
     try {
       rzp.open();
     } catch (error) {
+      // Restore console functions
+      console.error = originalConsoleError;
+      console.warn = originalConsoleWarn;
+      
       console.error('Error opening Razorpay modal:', error);
       reject(new Error('Failed to open payment gateway'));
     }
