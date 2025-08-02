@@ -1,0 +1,432 @@
+# Butterfly Authentique - Project Context & Rules
+
+## 1. Product Overview
+
+### What We Are Building
+**Butterfly Authentique** is a premium e-commerce platform specializing in handcrafted Indian art and jewelry. Our product categories include:
+
+- **Jewelry**: Necklaces, Earrings, Bracelets, Rings, Anklets, Pendants
+- **Paintings**: Oil Paintings, Watercolor, Acrylic, Mixed Media, Digital Art, Traditional
+- **Stoles**: Silk Stoles, Wool Stoles, Cotton Stoles, Embroidered Stoles, Cashmere Stoles
+- **Home Decor**: Wall Art, Vases, Candles, Cushions, Rugs, Tableware
+- **Accessories**: Bags, Scarves, Belts, Hair Accessories, Jewelry Boxes
+
+### Target Audience
+- Art collectors and enthusiasts
+- Fashion-conscious individuals seeking unique pieces
+- International customers interested in Indian craftsmanship
+- Premium market segment valuing authenticity and quality
+
+### Key Features
+- **Admin Panel**: Complete product management with 7 comprehensive tabs
+- **User Authentication**: Firebase Auth with email verification
+- **Shopping Cart**: Razorpay integration for payments
+- **Wishlist System**: User-curated product collections
+- **Responsive Design**: Mobile-first approach following design system guidelines
+- **SEO Optimized**: Meta tags, structured data, and search-friendly URLs
+
+## 2. Git Workflow & Deployment
+
+### Repository Information
+- **GitHub Repository**: https://github.com/butterflyauthentique/main.git
+- **Branch Strategy**: Main branch for production, feature branches for development
+- **Working Directory**: `/Users/pritinupur/ba_website`
+
+### Git Commands & Workflow
+```bash
+# Check status and ensure clean working tree
+git status
+
+# Add all changes
+git add .
+
+# Commit with descriptive message
+git commit -m "Descriptive commit message explaining changes"
+
+# Push to remote repository
+git push origin main
+
+# Check if up to date with remote
+git log --oneline -5
+```
+
+### Production Build & Deployment
+```bash
+# Deploy to production (includes build and Firebase deployment)
+npm run deploy
+
+# Alternative deployment commands
+firebase deploy --only hosting    # Deploy only hosting
+firebase deploy --only functions  # Deploy only functions
+firebase deploy                   # Deploy everything
+```
+
+### Pre-Deployment Checklist
+1. ✅ Ensure all changes are committed and pushed to git
+2. ✅ Test locally with `npm run dev`
+3. ✅ Verify Firebase configuration is correct
+4. ✅ Check for any console errors or warnings
+
+### Post-Deployment Steps
+1. **Restart Local Development Server**:
+   ```bash
+   npm run restart-dev
+   # or manually
+   pkill -f "next dev"
+   rm -rf .next
+   npm run dev
+   ```
+
+2. **Verify Production**:
+   - ✅ Homepage loads correctly
+   - ✅ Shop page displays products
+   - ✅ Product pages are accessible (no 403 errors)
+   - ✅ Admin panel is functional
+
+## 3. Firebase Configuration & Authentication
+
+### Firebase Project Details
+- **Project ID**: `butterflyauthentique33`
+- **Project Console**: https://console.firebase.google.com/project/butterflyauthentique33/overview
+- **Hosting URL**: https://butterflyauthentique33.web.app
+- **Cloud Function**: https://ssrbutterflyauthentique-u3rvbhnx4a-de.a.run.app
+
+### Firebase Services Used
+- **Firebase App Hosting** (Web Frameworks) - Next.js 15.4.5
+- **Firestore Database** - NoSQL document database
+- **Firebase Authentication** - User management
+- **Firebase Storage** - Image and file storage
+- **Cloud Functions** - Server-side rendering and API endpoints
+
+### Environment Variables (.env.local)
+```bash
+# Firebase Configuration
+NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyBTZwEHiG_KmjmZY1wXW3Xane8F4pUqq_E
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=butterflyauthentique33.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=butterflyauthentique33
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=butterflyauthentique33.firebasestorage.app
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=147808797895
+NEXT_PUBLIC_FIREBASE_APP_ID=1:147808797895:web:5013c06442c7063f796ae2
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=G-KZCWPPK4G3
+
+# Razorpay Configuration
+NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_live_AaXoLwVs0isbmk
+RAZORPAY_KEY_SECRET=07tAIwsgvSam2leJPhNA74tR
+
+# Admin Configuration
+ADMIN_EMAIL=butterfly.auth@gmail.com
+ADMIN_PASSWORD=secure_admin_password
+
+# App Configuration
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_APP_NAME=Butterfly Authentique
+```
+
+### Critical Firebase Setup Notes
+**⚠️ IMPORTANT**: After deployment, if you see 403 errors on product pages, manually fix Cloud Function authentication:
+
+**Google Cloud Console Method:**
+1. Go to: https://console.cloud.google.com/functions/list?project=butterflyauthentique33
+2. Find function: `ssrbutterflyauthentique`
+3. Click on the function name
+4. Go to **Permissions** tab
+5. Click **Add Principal**
+6. Add `allUsers` with role `Cloud Functions Invoker`
+7. Save the changes
+
+## 4. Frontend Architecture
+
+### Tech Stack
+- **Framework**: Next.js 15.4.5 with App Router
+- **Styling**: Tailwind CSS 4 with JIT mode
+- **Language**: TypeScript
+- **State Management**: Zustand (useAppStore)
+- **UI Components**: Custom components following design system
+- **Icons**: Lucide React
+- **Notifications**: React Hot Toast
+- **Forms**: React Hook Form with validation
+
+### Project Structure
+```
+src/
+├── app/                    # Next.js App Router pages
+│   ├── (admin)/           # Admin panel routes
+│   ├── (auth)/            # Authentication routes
+│   ├── (marketing)/       # Marketing pages
+│   ├── (shop)/            # E-commerce routes
+│   └── api/               # API routes
+├── components/            # Reusable UI components
+├── lib/                   # Utilities and services
+├── types/                 # TypeScript type definitions
+└── globals.css           # Global styles
+```
+
+### Key Components
+- **AdminSidebar**: Navigation for admin panel
+- **ImageUploader**: Firebase Storage integration
+- **Header/Footer**: Site-wide navigation
+- **ProductCard**: Product display component
+- **AuthErrorModal**: Authentication error handling
+
+### Design System Implementation
+Following `Docs/02-mobile-design-system-guidelines.md`:
+
+**Spacing Scale**: 0.25rem to 4rem (4px to 64px)
+**Border Radius**: 0 to 1.5rem (sharp to rounded)
+**Color Palette**: Primary red (#e12a47), grays, whites
+**Typography**: Responsive font scaling
+**Touch Targets**: Minimum 44px for mobile interactions
+**Animations**: Standard easing with 150ms-500ms durations
+
+## 5. Backend Architecture
+
+### Firebase Firestore Collections
+```typescript
+// Products Collection
+products: {
+  id: string;
+  name: string;
+  description: string;
+  shortDescription: string;
+  price: number | null;
+  comparePrice: number;
+  costPrice: number;
+  sku: string;
+  category: string;
+  subcategory: string;
+  tags: string[];
+  stock: number | null;
+  images: Array<{id: string, url: string, alt: string, isPrimary: boolean}>;
+  variants: Array<{id: string, name: string, price: number, stock: number, sku: string}>;
+  status: 'active' | 'draft' | 'archived';
+  isActive: boolean;
+  isFeatured: boolean;
+  badges: string[];
+  // ... additional fields
+}
+
+// Users Collection
+users: {
+  id: string;
+  email: string;
+  displayName: string;
+  role: 'user' | 'admin' | 'super_admin';
+  // ... additional fields
+}
+
+// Orders Collection
+orders: {
+  id: string;
+  userId: string;
+  products: Array<{productId: string, quantity: number, price: number}>;
+  total: number;
+  status: 'pending' | 'confirmed' | 'shipped' | 'delivered';
+  paymentId: string;
+  // ... additional fields
+}
+
+// Wishlist Collection
+wishlist: {
+  id: string;
+  userId: string;
+  productId: string;
+  addedAt: Timestamp;
+}
+```
+
+### Firebase Security Rules
+```javascript
+// Firestore Rules
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Products - public read, admin write
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+    
+    // Users - public read for auth checks, user write own data
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Orders - user read/write own orders, admin read all
+    match /orders/{orderId} {
+      allow read, write: if request.auth != null && 
+        (request.auth.uid == resource.data.userId || request.auth.token.admin == true);
+    }
+    
+    // Wishlist - user read/write own items
+    match /wishlist/{itemId} {
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+    }
+  }
+}
+```
+
+### API Endpoints
+- `/api/admins` - Admin management
+- `/api/razorpay/create-order` - Payment order creation
+- `/api/razorpay/verify-payment` - Payment verification
+
+## 6. Admin Panel Features
+
+### Product Management Tabs
+1. **Basic Information**: Name, description, category, artist, materials
+2. **Pricing & Inventory**: Price, stock, SKU, weight, dimensions
+3. **Media & Content**: Images, videos, care instructions, warranty
+4. **Variants**: Product variants with individual pricing and stock
+5. **Shipping & Tax**: Shipping class, tax settings
+6. **SEO & Marketing**: Meta tags, URL slug, product tags
+7. **Product Badges**: Bestseller, New Arrival, Limited Edition, etc.
+
+### Admin Roles & Permissions
+- **Super Admin** (`butterfly.auth@gmail.com`): Full access, can manage other admins
+- **Admin**: Product management, order viewing, dashboard access
+- **User**: Shopping, wishlist, order history
+
+### Quick Actions (Settings Page)
+- Hero image management (3 sections on homepage)
+- System configuration
+- User management
+
+## 7. Development Workflow
+
+### Local Development
+```bash
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
+
+# Lint code
+npm run lint
+```
+
+### Package Scripts
+```json
+{
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "deploy": "./scripts/deploy.sh",
+    "restart-dev": "./scripts/restart-dev.sh"
+  }
+}
+```
+
+### Common Development Tasks
+1. **Adding Products**: Use admin panel with comprehensive form
+2. **Managing Images**: Firebase Storage with automatic thumbnails
+3. **User Management**: Firebase Auth with role-based access
+4. **Order Processing**: Razorpay integration with webhook handling
+5. **Content Updates**: Edit pages through admin panel
+
+## 8. Performance & Optimization
+
+### Build Optimization
+- **Static Generation**: Product pages pre-rendered for SEO
+- **Image Optimization**: WebP format with responsive sizes
+- **Code Splitting**: Automatic by Next.js
+- **Caching**: Firebase CDN for static assets
+
+### Monitoring & Analytics
+- **Firebase Analytics**: User behavior tracking
+- **Performance Monitoring**: Core Web Vitals
+- **Error Tracking**: Firebase Crashlytics
+- **SEO**: Meta tags, structured data, sitemap
+
+## 9. Security Considerations
+
+### Authentication
+- Firebase Auth with email verification
+- Role-based access control
+- Secure admin panel access
+- Session management
+
+### Data Protection
+- Input validation on all forms
+- XSS prevention with proper escaping
+- CSRF protection
+- Secure API endpoints
+
+### Payment Security
+- Razorpay PCI DSS compliance
+- Secure payment processing
+- Order verification
+- Fraud prevention measures
+
+## 10. Deployment Checklist
+
+### Pre-Deployment
+- [ ] All changes committed and pushed
+- [ ] Local testing completed
+- [ ] Environment variables configured
+- [ ] Firebase project settings verified
+
+### Deployment
+- [ ] Run `npm run deploy`
+- [ ] Monitor build process
+- [ ] Verify Cloud Function deployment
+- [ ] Test production URLs
+
+### Post-Deployment
+- [ ] Fix Cloud Function authentication if needed
+- [ ] Test all critical user flows
+- [ ] Verify admin panel functionality
+- [ ] Check mobile responsiveness
+- [ ] Restart local development server
+
+## 11. Troubleshooting
+
+### Common Issues
+1. **403 Errors on Product Pages**: Fix Cloud Function IAM permissions
+2. **Local Server Errors**: Clear `.next` cache and restart
+3. **Image Upload Failures**: Check Firebase Storage rules
+4. **Build Failures**: Verify TypeScript types and dependencies
+
+### Debug Commands
+```bash
+# Check Firebase status
+firebase projects:list
+firebase use butterflyauthentique33
+
+# View function logs
+firebase functions:log
+
+# Test production
+curl -I https://butterflyauthentique33.web.app/product/[product-slug]
+
+# Clear local cache
+rm -rf .next out
+```
+
+## 12. Future Enhancements
+
+### Planned Features
+- **Multi-language Support**: Internationalization
+- **Advanced Search**: Elasticsearch integration
+- **Inventory Management**: Real-time stock tracking
+- **Analytics Dashboard**: Sales and user analytics
+- **Mobile App**: React Native companion app
+- **AI Recommendations**: Product suggestions
+- **Loyalty Program**: Customer rewards system
+
+### Technical Debt
+- **Performance**: Implement service workers for offline support
+- **Testing**: Add comprehensive unit and integration tests
+- **Documentation**: API documentation and user guides
+- **Monitoring**: Enhanced error tracking and performance monitoring
+
+---
+
+**Note**: This cursor rules file should be updated whenever significant changes are made to the project architecture, deployment process, or business requirements. Keep it synchronized with the actual codebase and documentation. 

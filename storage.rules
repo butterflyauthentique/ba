@@ -1,0 +1,36 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow public read access to all images
+    match /Images/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.resource.size < 10 * 1024 * 1024 // 10MB max
+                   && request.resource.contentType.matches('image/.*');
+    }
+    
+    // Allow public read access to product images
+    match /products/{category}/{productId}/{type}/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.resource.size < 10 * 1024 * 1024 // 10MB max
+                   && request.resource.contentType.matches('image/.*')
+                   && (type == 'originals' || type == 'thumbnails' || type == 'variants');
+    }
+    
+    // Allow authenticated users to upload their own avatars
+    match /users/{userId}/avatar/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId
+                   && request.resource.size < 5 * 1024 * 1024 // 5MB max
+                   && request.resource.contentType.matches('image/.*');
+    }
+    
+    // Allow public read access to all other files
+    match /{allPaths=**} {
+      allow read: if true;
+      allow write, delete: if request.auth != null;
+    }
+  }
+} 

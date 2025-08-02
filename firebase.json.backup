@@ -1,0 +1,112 @@
+{
+  "hosting": {
+    "public": ".next",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "cleanUrls": true,
+    "rewrites": [
+      {
+        "source": "/_next/static/**",
+        "destination": "/_next/static/**"
+      },
+      {
+        "source": "/static/**",
+        "destination": "/static/**"
+      },
+      {
+        "source": "/favicon.ico",
+        "destination": "/favicon.ico"
+      },
+      {
+        "source": "/robots.txt",
+        "destination": "/robots.txt"
+      },
+      {
+        "source": "/sitemap.xml",
+        "destination": "/sitemap.xml"
+      },
+      {
+        "source": "/logo.png",
+        "destination": "/logo.png"
+      },
+      {
+        "source": "/android-chrome-192x192.png",
+        "destination": "/android-chrome-192x192.png"
+      },
+      {
+        "source": "/android-chrome-512x512.png",
+        "destination": "/android-chrome-512x512.png"
+      },
+      {
+        "source": "/apple-touch-icon.png",
+        "destination": "/apple-touch-icon.png"
+      },
+      {
+        "source": "/favicon-16x16.png",
+        "destination": "/favicon-16x16.png"
+      },
+      {
+        "source": "/favicon-32x32.png",
+        "destination": "/favicon-32x32.png"
+      },
+      {
+        "source": "/site.webmanifest",
+        "destination": "/site.webmanifest"
+      },
+      {
+        "source": "**",
+        "destination": "/server/app/index.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "/_next/static/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=31536000, immutable"
+          }
+        ]
+      },
+      {
+        "source": "/static/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=31536000, immutable"
+          }
+        ]
+      },
+      {
+        "source": "**/*.css",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=31536000, immutable"
+          }
+        ]
+      },
+      {
+        "source": "**/*.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=31536000, immutable"
+          }
+        ]
+      }
+    ]
+  },
+  "functions": {
+    "source": "functions"
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  }
+}
