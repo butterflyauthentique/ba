@@ -28,9 +28,10 @@
 ## 2. Git Workflow & Deployment
 
 ### Repository Information
-- **GitHub Repository**: https://github.com/butterflyauthentique/main.git
-- **Branch Strategy**: Main branch for production, feature branches for development
+- **GitHub Repository**: https://github.com/butterflyauthentique/ba.git
+- **Branch Strategy**: Main branch for production deployment
 - **Working Directory**: `/Users/pritinupur/ba_website`
+- **Current Status**: All changes synced, manual deployment working
 
 ### Git Commands & Workflow
 ```bash
@@ -52,20 +53,25 @@ git log --oneline -5
 
 ### Production Build & Deployment
 ```bash
-# Deploy to production (includes build and Firebase deployment)
-npm run deploy
-
-# Alternative deployment commands
+# Manual deployment (recommended - working)
 firebase deploy --only hosting    # Deploy only hosting
 firebase deploy --only functions  # Deploy only functions
 firebase deploy                   # Deploy everything
+
+# GitHub Actions deployment (currently failing - needs Firebase service account setup)
+git push origin main              # Triggers automatic deployment
+
+# Build for production testing
+npm run build                     # Test build locally
 ```
 
 ### Pre-Deployment Checklist
 1. ✅ Ensure all changes are committed and pushed to git
 2. ✅ Test locally with `npm run dev`
-3. ✅ Verify Firebase configuration is correct
-4. ✅ Check for any console errors or warnings
+3. ✅ Test build with `npm run build` (check for Suspense boundary issues)
+4. ✅ Verify Firebase configuration is correct
+5. ✅ Check for any console errors or warnings
+6. ✅ Ensure useSearchParams() is wrapped in Suspense boundary
 
 ### Post-Deployment Steps
 1. **Restart Local Development Server**:
@@ -133,6 +139,8 @@ NEXT_PUBLIC_APP_NAME=Butterfly Authentique
 5. Click **Add Principal**
 6. Add `allUsers` with role `Cloud Functions Invoker`
 7. Save the changes
+
+**⚠️ GITHUB ACTIONS ISSUE**: Currently failing due to Firebase service account configuration. Manual deployment works perfectly.
 
 ## 4. Frontend Architecture
 
@@ -385,6 +393,8 @@ npm run lint
 - [ ] Verify admin panel functionality
 - [ ] Check mobile responsiveness
 - [ ] Restart local development server
+- [ ] Verify contact information is live (email: butterflyauthentique@gmail.com, phone: +91 98236 14953)
+- [ ] Test payment flow and error handling
 
 ## 11. Troubleshooting
 
@@ -393,6 +403,8 @@ npm run lint
 2. **Local Server Errors**: Clear `.next` cache and restart
 3. **Image Upload Failures**: Check Firebase Storage rules
 4. **Build Failures**: Verify TypeScript types and dependencies
+5. **useSearchParams() Error**: Wrap in Suspense boundary for server-side rendering
+6. **GitHub Actions Failures**: Use manual deployment until service account is configured
 
 ### Debug Commands
 ```bash
@@ -408,9 +420,43 @@ curl -I https://butterflyauthentique33.web.app/product/[product-slug]
 
 # Clear local cache
 rm -rf .next out
+
+# Check deployment status
+curl -s "https://api.github.com/repos/butterflyauthentique/ba/actions/runs?per_page=1" | grep -E '"status"|"conclusion"'
+
+# Test contact page
+curl -s https://butterflyauthentique33.web.app/contact | grep -o 'butterflyauthentique@gmail.com'
 ```
 
-## 12. Future Enhancements
+## 12. Current Project Status (August 2024)
+
+### ✅ Completed Features
+- **Contact Information**: Email (butterflyauthentique@gmail.com) and phone (+91 98236 14953) added
+- **Payment Processing**: Razorpay integration with production keys
+- **Error Handling**: Comprehensive payment failure pages with Suspense boundaries
+- **Admin Panel**: Complete product management with 7 tabs
+- **User Authentication**: Firebase Auth with role-based access
+- **Shopping Cart**: Full cart functionality with hydration fixes
+- **Responsive Design**: Mobile-first approach following design system
+
+### 🔧 Technical Fixes Applied
+- **Build Issues**: Fixed useSearchParams() Suspense boundary requirement
+- **Payment Flow**: Added timeout mechanism and fallback success handling
+- **Console Errors**: Suppressed Razorpay security header errors
+- **GitHub Actions**: Added Node.js setup and npm caching (still needs service account)
+
+### 🚀 Deployment Status
+- **Manual Deployment**: ✅ Working perfectly
+- **GitHub Actions**: ❌ Failing (needs Firebase service account configuration)
+- **Production Site**: ✅ Live and functional at https://butterflyauthentique33.web.app
+
+### 📋 Next Steps for Future Development
+1. **Fix GitHub Actions**: Configure Firebase service account for automatic deployment
+2. **Add Testing**: Implement comprehensive test suite
+3. **Performance**: Add service workers and advanced caching
+4. **Analytics**: Enhanced tracking and reporting
+
+## 13. Future Enhancements
 
 ### Planned Features
 - **Multi-language Support**: Internationalization
