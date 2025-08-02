@@ -193,11 +193,52 @@ export default function CheckoutPage() {
         clearCart();
         router.push('/checkout/success');
       } else {
-        toast.error('Payment verification failed. Please try again.');
+        // Payment verification failed
+        const errorParams = new URLSearchParams({
+          error_code: 'VERIFICATION_FAILED',
+          error_description: 'Payment verification failed. Please try again.',
+          error_step: 'verification'
+        });
+        router.push(`/checkout/failure?${errorParams.toString()}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Payment error:', error);
-      toast.error('Payment failed. Please try again.');
+      
+      // Handle specific error types
+      let errorCode = 'PAYMENT_FAILED';
+      let errorDescription = 'Payment failed. Please try again.';
+      let errorStep = 'payment';
+
+      if (error.message?.includes('declined')) {
+        errorCode = 'PAYMENT_DECLINED';
+        errorDescription = 'Your payment was declined. Please try a different payment method.';
+      } else if (error.message?.includes('insufficient')) {
+        errorCode = 'INSUFFICIENT_FUNDS';
+        errorDescription = 'Insufficient funds. Please check your balance.';
+      } else if (error.message?.includes('expired')) {
+        errorCode = 'CARD_EXPIRED';
+        errorDescription = 'Your card has expired. Please use a different card.';
+      } else if (error.message?.includes('invalid')) {
+        errorCode = 'INVALID_CARD';
+        errorDescription = 'Invalid card details. Please check and try again.';
+      } else if (error.message?.includes('network')) {
+        errorCode = 'NETWORK_ERROR';
+        errorDescription = 'Network error occurred. Please check your connection and try again.';
+      } else if (error.message?.includes('timeout')) {
+        errorCode = 'TIMEOUT';
+        errorDescription = 'Payment request timed out. Please try again.';
+      } else if (error.message?.includes('gateway')) {
+        errorCode = 'GATEWAY_ERROR';
+        errorDescription = 'Payment gateway error. Please try again later.';
+      }
+
+      const errorParams = new URLSearchParams({
+        error_code: errorCode,
+        error_description: errorDescription,
+        error_step: errorStep
+      });
+      
+      router.push(`/checkout/failure?${errorParams.toString()}`);
     } finally {
       setIsLoading(false);
     }

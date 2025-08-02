@@ -179,7 +179,14 @@ export const initializeRazorpayCheckout = async (order: CheckoutOrder): Promise<
         // Handle modal dismissal
         console.log('Payment modal dismissed');
       }
-    }
+    },
+    // Add error handling for security headers
+    retry: {
+      enabled: true,
+      max_count: 3
+    },
+    // Suppress console errors for security headers
+    suppress_console_errors: true
   };
 
   return new Promise((resolve, reject) => {
@@ -187,14 +194,26 @@ export const initializeRazorpayCheckout = async (order: CheckoutOrder): Promise<
     
     rzp.on('payment.failed', function (response: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       console.error('Payment failed:', response.error);
-      reject(new Error(response.error.description));
+      reject(new Error(response.error.description || 'Payment failed'));
     });
 
     rzp.on('payment.success', function (response: PaymentResponse) { // eslint-disable-line @typescript-eslint/no-explicit-any
+      console.log('Payment success event triggered:', response);
       resolve(response);
     });
 
-    rzp.open();
+    // Add error handling for initialization
+    rzp.on('payment.error', function (response: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+      console.error('Payment error:', response.error);
+      reject(new Error(response.error.description || 'Payment error occurred'));
+    });
+
+    try {
+      rzp.open();
+    } catch (error) {
+      console.error('Error opening Razorpay modal:', error);
+      reject(new Error('Failed to open payment gateway'));
+    }
   });
 };
 
