@@ -47,5 +47,57 @@ NEXT_PUBLIC_RAZORPAY_KEY=
 ```
 
 ## Deployment
-- Staging: Automatic on `staging` branch
-- Production: Manual deployment from `main` branch
+
+### Firebase Deployment
+- **Project ID**: `butterflyauthentique33`
+- **Admin Email**: `butterfly.auth@gmail.com`
+- **Deployment URL**: https://butterflyauthentique33.web.app
+- **Deployment Command**: `firebase deploy --only hosting`
+- **Last Successful Deployment**: 2025-08-06
+
+### Deployment Process
+1. **Build the application**:
+   ```bash
+   npm run build
+   ```
+
+2. **Deploy to Firebase**:
+   ```bash
+   firebase login:ci
+   # Follow the prompts to authenticate with butterfly.auth@gmail.com
+   firebase use butterflyauthentique33
+   firebase deploy --only hosting
+   ```
+
+3. **Verify Deployment**:
+   - Visit: https://console.firebase.google.com/project/butterflyauthentique33/hosting
+   - Check the deployment history and status
+
+### Environment Setup
+1. **Firebase Login**:
+   ```bash
+   firebase login
+   # Use: butterfly.auth@gmail.com
+   # Password: **********
+   ```
+
+2. **Select Project**:
+   ```bash
+   firebase use butterflyauthentique33
+   ```
+
+3. **Deploy**:
+   ```bash
+   npm run build
+   firebase deploy --only hosting
+   ```
+
+### Git Integration
+- **Repository**: `git@github.com:butterflyauthentique/ba.git`
+- **Main Branch**: `main`
+- **Staging Branch**: `staging`
+
+### Security Notes
+- Never commit credentials to version control
+- Store sensitive information in `.env.local` (included in `.gitignore`)
+- Use Firebase environment configuration for production secrets

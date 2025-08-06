@@ -1,36 +1,73 @@
-# Coding Standards
-typescript:
-  strict: true
-  noImplicitAny: true
-  noUnusedLocals: true
-  noUnusedParameters: true
+# Security and Deployment Rules
 
-# React/Next.js
-react:
-  hooks:
-    rulesOfHooks: error
-    exhaustiveDeps: warn
-  next:
-    linkPassHref: true
-    imgAltRequirement: true
+# Credential Management
+credentials:
+  storage: encrypted
+  locations:
+    - .env.local
+    - .firebaserc
+    - firebase.json
+  git:
+    prevent_commit_patterns:
+      - ".*[pP]assword.*"
+      - ".*[sS]ecret.*"
+      - ".*[kK]ey.*"
+      - ".*[tT]oken.*"
+      - ".*[cC]redential.*"
 
-# Firebase Security
-firebase:
-  securityRules:
-    validate: true
-    testMode: true
+# Deployment Rules
+deployment:
+  firebase:
+    required_environment_vars:
+      - NEXT_PUBLIC_FIREBASE_API_KEY
+      - NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+      - NEXT_PUBLIC_FIREBASE_PROJECT_ID
+      - NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+      - NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+      - NEXT_PUBLIC_FIREBASE_APP_ID
+    default_account: "butterfly.auth@gmail.com"
+    project_id: "butterflyauthentique33"
 
-# Git Workflow
+# Git Rules
 git:
-  branchNaming: ^(feature|bugfix|hotfix|release)/[a-z0-9-]+$
-  commitMessage: ^(feat|fix|docs|style|refactor|test|chokeep)\([a-z-]+\): .{10,72}
+  branch_protection:
+    main: 
+      required_approvals: 1
+      require_status_checks: true
+    staging:
+      require_status_checks: true
+  commit_message:
+    pattern: "^(feat|fix|docs|style|refactor|test|chore)\\([a-z-]+\\): .{10,72}"
+    example: "feat(auth): add login functionality"
 
-# Code Style
-formatting:
-  indent: 2
-  quotes: single
-  semi: true
-  trailingComma: es5
-  printWidth: 100
-  bracketSameLine: false
-  singleAttributePerLine: true
+# Code Review Rules
+code_review:
+  required_reviewers: 1
+  required_checks:
+    - test
+    - build
+  blocking_issues:
+    - security
+    - performance
+
+# Security Rules
+security:
+  sensitive_data:
+    prevent_commits: true
+    scan_files: true
+    alert_on_detection: true
+  dependencies:
+    auto_update: true
+    vulnerability_scan: true
+
+# Environment Configuration
+environments:
+  development:
+    firebase_emulators: true
+    debug: true
+  staging:
+    firebase_project: "butterflyauthentique33-staging"
+    debug: false
+  production:
+    firebase_project: "butterflyauthentique33"
+    debug: false

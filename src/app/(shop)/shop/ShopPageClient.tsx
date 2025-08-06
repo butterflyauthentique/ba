@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { 
@@ -21,51 +22,81 @@ import { ClientProductService } from '@/lib/services/productService';
 
 interface ShopPageClientProps {
   products: Product[]; // Server-side fetched products
+  initialCategory?: string; // Initial category to select
 }
 
-export default function ShopPageClient({ products: initialProducts }: ShopPageClientProps) {
+export default function ShopPageClient({ 
+  products: initialProducts 
+}: ShopPageClientProps) {
   const { addToCart } = useHydratedStore();
   const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // Set initial category from URL on component mount
+  useEffect(() => {
+    const categoryFromUrl = searchParams?.get('category');
+    if (categoryFromUrl) {
+      // Convert to title case to match the category names in the database
+      const formattedCategory = categoryFromUrl.charAt(0).toUpperCase() + categoryFromUrl.slice(1).toLowerCase();
+      setSelectedCategory(formattedCategory);
+    } else {
+      setSelectedCategory('All');
+    }
+  }, [searchParams]);
+
+  // Update URL when category changes
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams?.toString() || '');
+    if (selectedCategory === 'All') {
+      params.delete('category');
+    } else {
+      // Convert to lowercase for URL
+      params.set('category', selectedCategory.toLowerCase());
+    }
+    
+    // Update URL without page reload
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl);
+  }, [selectedCategory, searchParams]);
   const [sortBy, setSortBy] = useState('name');
   const [wishlistItems, setWishlistItems] = useState<Set<string>>(new Set());
 
-  // Fetch products by category when category changes
+  // Load initial products and filter client-side for better UX
   useEffect(() => {
-    const fetchProductsByCategory = async () => {
+    const loadInitialProducts = async () => {
       try {
         setLoading(true);
-        
-        if (selectedCategory === 'all') {
-          // Use server-side data for 'all' category
-          const allProducts = await ClientProductService.getProducts();
-          setProducts(allProducts);
-        } else {
-          // Use the proper category filtering method
-          const categoryProducts = await ClientProductService.getProductsByCategory(selectedCategory);
-          setProducts(categoryProducts);
-        }
+        const allProducts = await ClientProductService.getProducts();
+        setProducts(allProducts);
       } catch (error) {
-        console.error('Error fetching products by category:', error);
+        console.error('Error loading products:', error);
         toast.error('Failed to load products');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProductsByCategory();
-  }, [selectedCategory]);
+    loadInitialProducts();
+  }, []);
 
-  // Filter products based on search only (category filtering is now done server-side)
+  // Filter products based on search and category
   const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.artist?.toLowerCase().includes(searchTerm.toLowerCase());
+    // Check if product matches the selected category (case-insensitive)
+    const matchesCategory = selectedCategory === 'all' || 
+      product.category.toLowerCase() === selectedCategory.toLowerCase();
     
-    return matchesSearch;
+    // Check if product matches the search term
+    const matchesSearch = searchTerm === '' || 
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.artist?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    return matchesCategory && matchesSearch;
   });
 
   // Sort products
@@ -135,7 +166,13 @@ export default function ShopPageClient({ products: initialProducts }: ShopPageCl
   };
 
   // Get unique categories from initial products (not filtered products)
-  const categories = ['all', ...Array.from(new Set(initialProducts.map(p => p.category)))];
+  const categories = ['all', ...Array.from(new Set(initialProducts.map(p => p.category.toLowerCase())))];
+  
+  // Format category for display (capitalize first letter)
+  const formatCategory = (category: string) => {
+    if (category === 'all') return 'All Categories';
+    return category.charAt(0).toUpperCase() + category.slice(1);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -178,7 +215,7 @@ export default function ShopPageClient({ products: initialProducts }: ShopPageCl
               >
                 {categories.map((category) => (
                   <option key={category} value={category}>
-                    {category === 'all' ? 'All Categories' : category}
+                    {formatCategory(category)}
                   </option>
                 ))}
               </select>
