@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Butterfly Authentique Context",
+  "description": "Context server configuration for Butterfly Authentique e-commerce platform",
+  "version": "1.0.0",
+  "contexts": [
+    {
+      "name": "Database Schema",
+      "description": "Firestore collections and their structures",
+      "sources": [
+        {
+          "type": "file",
+          "path": "FIRESTORE_SETUP.md"
+        },
+        {
+          "type": "file",
+          "path": "firestore.rules"
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "description": "Authentication flows and user management",
+      "sources": [
+        {
+          "type": "file",
+          "path": "AUTHENTICATION_SETUP.md"
+        },
+        {
+          "type": "directory",
+          "path": "src/lib/auth"
+        }
+      ]
+    },
+    {
+      "name": "Admin Features",
+      "description": "Admin dashboard and management",
+      "sources": [
+        {
+          "type": "directory",
+          "path": "src/app/(admin)"
+        },
+        {
+          "type": "file",
+          "path": "ADMIN_FUNCTIONS_MAPPING.md"
+        }
+      ]
+    },
+    {
+      "name": "E-commerce Features",
+      "description": "Product catalog, cart, and checkout",
+      "sources": [
+        {
+          "type": "directory",
+          "path": "src/app/(shop)"
+        },
+        {
+          "type": "file",
+          "path": "RAZORPAY_PRODUCTION_SETUP.md"
+        }
+      ]
+    }
+  ]
+}

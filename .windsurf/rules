@@ -1,0 +1,36 @@
+# Coding Standards
+typescript:
+  strict: true
+  noImplicitAny: true
+  noUnusedLocals: true
+  noUnusedParameters: true
+
+# React/Next.js
+react:
+  hooks:
+    rulesOfHooks: error
+    exhaustiveDeps: warn
+  next:
+    linkPassHref: true
+    imgAltRequirement: true
+
+# Firebase Security
+firebase:
+  securityRules:
+    validate: true
+    testMode: true
+
+# Git Workflow
+git:
+  branchNaming: ^(feature|bugfix|hotfix|release)/[a-z0-9-]+$
+  commitMessage: ^(feat|fix|docs|style|refactor|test|chokeep)\([a-z-]+\): .{10,72}
+
+# Code Style
+formatting:
+  indent: 2
+  quotes: single
+  semi: true
+  trailingComma: es5
+  printWidth: 100
+  bracketSameLine: false
+  singleAttributePerLine: true
