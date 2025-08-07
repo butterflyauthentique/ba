@@ -3,14 +3,15 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Mail, Phone, MapPin, Facebook, Instagram, Youtube } from 'lucide-react';
+import { NewsletterSignup } from '@/components/forms/NewsletterSignup';
 
 export default function Footer() {
   return (
     <footer className="bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Company Info */}
-          <div className="lg:col-span-1">
+          <div>
             <div className="flex items-center mb-4">
               <Image
                 src="/logo.png"
@@ -50,6 +51,15 @@ export default function Footer() {
                 <Youtube className="h-5 w-5" />
               </a>
             </div>
+          </div>
+
+          {/* Newsletter Signup */}
+          <div className="lg:col-span-1">
+            <h3 className="text-lg font-semibold mb-4">Stay Updated</h3>
+            <p className="text-gray-300 mb-4">
+              Subscribe to our newsletter for the latest collections and exclusive offers.
+            </p>
+            <NewsletterSignup />
           </div>
 
           {/* Quick Links */}

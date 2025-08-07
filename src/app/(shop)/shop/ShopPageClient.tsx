@@ -37,31 +37,35 @@ export default function ShopPageClient({
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  // Set initial category from URL on component mount
+  // Initialize category from URL or default to 'all'
   useEffect(() => {
     const categoryFromUrl = searchParams?.get('category');
-    if (categoryFromUrl) {
-      // Convert to title case to match the category names in the database
-      const formattedCategory = categoryFromUrl.charAt(0).toUpperCase() + categoryFromUrl.slice(1).toLowerCase();
-      setSelectedCategory(formattedCategory);
+    
+    // If no category in URL, set it to 'all' and update URL
+    if (!categoryFromUrl) {
+      const params = new URLSearchParams(searchParams?.toString() || '');
+      params.set('category', 'all');
+      const newUrl = `${window.location.pathname}?${params.toString()}`;
+      window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl);
+      setSelectedCategory('all');
     } else {
-      setSelectedCategory('All');
+      // Convert to lowercase for consistent comparison
+      const normalizedCategory = categoryFromUrl.toLowerCase();
+      setSelectedCategory(normalizedCategory);
     }
   }, [searchParams]);
 
   // Update URL when category changes
   useEffect(() => {
     const params = new URLSearchParams(searchParams?.toString() || '');
-    if (selectedCategory === 'All') {
-      params.delete('category');
-    } else {
-      // Convert to lowercase for URL
-      params.set('category', selectedCategory.toLowerCase());
-    }
+    params.set('category', selectedCategory);
     
-    // Update URL without page reload
-    const newUrl = `${window.location.pathname}?${params.toString()}`;
-    window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl);
+    // Only update if the URL would actually change
+    const currentCategory = params.get('category');
+    if (currentCategory !== selectedCategory) {
+      const newUrl = `${window.location.pathname}?${params.toString()}`;
+      window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl);
+    }
   }, [selectedCategory, searchParams]);
   const [sortBy, setSortBy] = useState('name');
   const [wishlistItems, setWishlistItems] = useState<Set<string>>(new Set());
@@ -88,11 +92,11 @@ export default function ShopPageClient({
   const filteredProducts = products.filter(product => {
     // Check if product matches the selected category (case-insensitive)
     const matchesCategory = selectedCategory === 'all' || 
-      product.category.toLowerCase() === selectedCategory.toLowerCase();
+      product.category?.toLowerCase() === selectedCategory.toLowerCase();
     
     // Check if product matches the search term
-    const matchesSearch = searchTerm === '' || 
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = !searchTerm || searchTerm === '' || 
+      product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.artist?.toLowerCase().includes(searchTerm.toLowerCase());
     
@@ -214,7 +218,10 @@ export default function ShopPageClient({
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
               >
                 {categories.map((category) => (
-                  <option key={category} value={category}>
+                  <option 
+                    key={category} 
+                    value={category}
+                  >
                     {formatCategory(category)}
                   </option>
                 ))}

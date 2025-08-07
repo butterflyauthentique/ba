@@ -103,7 +103,7 @@ const categories = [
 ];
 
 const subcategories = {
-  'Jewelry': ['Necklaces', 'Earrings', 'Bracelets', 'Rings', 'Anklets', 'Pendants'],
+  'Jewelry': ['Necklaces', 'Earrings', 'Bracelets', 'Rings', 'Anklets', 'Pendants', 'Necklace & Earrings Set', 'Necklace, Earrings & Bracelet Set'],
   'Paintings': ['Oil Paintings', 'Watercolor', 'Acrylic', 'Mixed Media', 'Digital Art', 'Traditional'],
   'Stoles': ['Silk Stoles', 'Wool Stoles', 'Cotton Stoles', 'Embroidered Stoles', 'Cashmere Stoles'],
   'Home Decor': ['Wall Art', 'Vases', 'Candles', 'Cushions', 'Rugs', 'Tableware'],
