@@ -1,10 +1,8 @@
 import type { Metadata } from 'next';
 
 import { Inter } from 'next/font/google'
-import { usePathname } from 'next/navigation';
-import { useEffect } from 'react';
-import { trackPageView } from '@/lib/analytics';
 import { generateOrganizationStructuredData, generateWebsiteStructuredData } from '@/lib/structuredData';
+import AnalyticsWrapper from '@/components/analytics/AnalyticsWrapper';
 import './globals.css'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
@@ -80,14 +78,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const pathname = usePathname();
-
-  useEffect(() => {
-    if (pathname) {
-      trackPageView(pathname);
-    }
-  }, [pathname]);
-
   // Generate structured data
   const organizationStructuredData = generateOrganizationStructuredData();
   const websiteStructuredData = generateWebsiteStructuredData();
@@ -107,6 +97,7 @@ export default function RootLayout({
         />
       </head>
       <body className={inter.className}>
+        <AnalyticsWrapper />
         <AuthProvider>
           <div className="min-h-screen flex flex-col">
             <Header />

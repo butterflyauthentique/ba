@@ -67,9 +67,9 @@ export default function Header() {
               Home
             </Link>
             <Link 
-              href="/shop" 
+              href="/shop?category=all" 
               className={`text-sm font-medium transition-colors ${
-                pathname === '/shop' ? 'text-rose-600' : 'text-gray-700 hover:text-rose-600'
+                pathname.startsWith('/shop') ? 'text-rose-600' : 'text-gray-700 hover:text-rose-600'
               }`}
             >
               Shop
