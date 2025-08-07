@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import ProductDetailClient from './ProductDetailClient';
 import { ServerProductService } from '@/lib/services/productService';
 import { serializeProduct } from '@/lib/utils';
+import { generateProductStructuredData } from '@/lib/structuredData';
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -41,15 +42,15 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
       'Butterfly Authentique'
     ].filter(Boolean).join(', '),
     openGraph: {
-      title: product.metaTitle || product.name,
+      title: product.metaTitle || `${product.name} - Butterfly Authentique`,
       description: productDescription,
       url: productUrl,
       siteName: 'Butterfly Authentique',
       images: [
         {
           url: productImage,
-          width: 1200,
-          height: 630,
+          width: 800,
+          height: 600,
           alt: product.name,
         },
       ],
@@ -58,7 +59,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     },
     twitter: {
       card: 'summary_large_image',
-      title: product.metaTitle || product.name,
+      title: product.metaTitle || `${product.name} - Butterfly Authentique`,
       description: productDescription,
       images: [productImage],
     },
@@ -110,8 +111,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
     notFound();
   }
 
-  // Serialize the product before passing to client component
+  // Serialize the product data to make it JSON-serializable
   const serializedProduct = serializeProduct(product);
+  const jsonLd = generateProductStructuredData(product);
 
-  return <ProductDetailClient product={serializedProduct} />;
-} 
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <ProductDetailClient product={serializedProduct} />
+    </>
+  );
+}

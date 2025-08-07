@@ -1,10 +1,16 @@
-import type { Metadata } from 'next'
+import type { Metadata } from 'next';
+
 import { Inter } from 'next/font/google'
+import { usePathname } from 'next/navigation';
+import { useEffect } from 'react';
+import { trackPageView } from '@/lib/analytics';
+import { generateOrganizationStructuredData, generateWebsiteStructuredData } from '@/lib/structuredData';
 import './globals.css'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import { AuthProvider } from '@/lib/auth'
 import { Toaster } from 'react-hot-toast'
+import Analytics from '@/components/analytics/GoogleAnalytics'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -62,13 +68,44 @@ export const metadata: Metadata = {
   },
 }
 
+// Add type for window.gtag
+declare global {
+  interface Window {
+    gtag: (...args: any[]) => void;
+  }
+}
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (pathname) {
+      trackPageView(pathname);
+    }
+  }, [pathname]);
+
+  // Generate structured data
+  const organizationStructuredData = generateOrganizationStructuredData();
+  const websiteStructuredData = generateWebsiteStructuredData();
+
   return (
     <html lang="en">
+      <head>
+        {/* Organization Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationStructuredData) }}
+        />
+        {/* Website Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteStructuredData) }}
+        />
+      </head>
       <body className={inter.className}>
         <AuthProvider>
           <div className="min-h-screen flex flex-col">
@@ -102,6 +139,7 @@ export default function RootLayout({
               },
             }}
           />
+          <Analytics />
         </AuthProvider>
       </body>
     </html>

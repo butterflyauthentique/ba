@@ -9,10 +9,12 @@
     "lint": "next lint",
     "deploy": "./scripts/deploy.sh",
     "restart-dev": "./scripts/restart-dev.sh",
-    "setup-production": "./scripts/setup-production.sh"
+    "setup-production": "./scripts/setup-production.sh",
+    "generate-sitemap": "node scripts/generate-sitemap.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
+    "@next/third-parties": "^15.4.6",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-dropdown-menu": "^2.1.15",
     "@radix-ui/react-select": "^2.2.5",

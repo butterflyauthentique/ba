@@ -1,7 +1,8 @@
-import { initializeApp, getApps } from 'firebase/app';
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore, collection, doc, setDoc, addDoc, getDoc, getDocs, query, where, orderBy, limit, Timestamp, connectFirestoreEmulator } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
+import { getAnalytics, isSupported } from 'firebase/analytics';
 import { Product } from '@/types/database';
 import { generateProductSlug } from './utils';
 
@@ -22,6 +23,26 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+
+// Initialize Analytics
+import { Analytics } from 'firebase/analytics';
+
+let analytics: Analytics | undefined;
+
+if (typeof window !== 'undefined') {
+  isSupported().then(supported => {
+    if (supported) {
+      analytics = getAnalytics(app);
+      console.log('Firebase Analytics is supported and initialized');
+    } else {
+      console.warn('Firebase Analytics is not supported in this browser');
+    }
+  }).catch(error => {
+    console.error('Error initializing Firebase Analytics:', error);
+  });
+}
+
+export { analytics };
 
 // Debug: Log Firebase configuration
 console.log('Firebase Config:', {

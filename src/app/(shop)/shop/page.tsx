@@ -1,7 +1,9 @@
 import { Metadata } from 'next';
+import { Suspense } from 'react';
 import ShopPageClient from './ShopPageClient';
 import { ServerProductService } from '@/lib/services/productService';
 import { serializeProduct } from '@/lib/utils';
+import Loading from '@/app/loading';
 
 export const metadata: Metadata = {
   title: 'Shop - Butterfly Authentique',
@@ -32,5 +34,9 @@ export default async function ShopPage() {
   // Serialize products for client component
   const serializedProducts = products.map(serializeProduct);
   
-  return <ShopPageClient products={serializedProducts} />;
+  return (
+    <Suspense fallback={<Loading />}>
+      <ShopPageClient products={serializedProducts} />
+    </Suspense>
+  );
 } 
