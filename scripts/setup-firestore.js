@@ -30,7 +30,7 @@ if (!firebaseConfig.projectId) {
   console.error('❌ Error: NEXT_PUBLIC_FIREBASE_PROJECT_ID is not set in your .env.local file');
   console.log('\n📝 Please create a .env.local file with the following variables:');
   console.log('NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key');
-  console.log('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com');
+  console.log('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.your_domain.com');
   console.log('NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id');
   console.log('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com');
   console.log('NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id');

@@ -223,49 +223,61 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
             {/* Jewelry Category */}
             <Link href="/shop?category=jewelry" className="group block">
-              <div className="relative overflow-hidden rounded-xl lg:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                <div className="aspect-square bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
-                  <div className="text-center text-white p-6">
-                    <div className="w-16 h-16 lg:w-20 lg:h-20 mx-auto mb-4 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                      <Heart className="w-8 h-8 lg:w-10 lg:h-10" />
-                    </div>
-                    <h3 className="text-xl lg:text-2xl font-bold mb-2">Jewelry</h3>
-                    <p className="text-white/90 text-sm lg:text-base">Handcrafted elegance</p>
+              <div className="relative overflow-hidden rounded-xl lg:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 h-full">
+                <div className="aspect-square relative">
+                  <Image
+                    src="https://firebasestorage.googleapis.com/v0/b/butterflyauthentique33.firebasestorage.app/o/Images%2FJewelry.jpg?alt=media&token=0de95ed0-4f7b-4b1f-b74f-33e577b4e1eb"
+                    alt="Jewelry Collection"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    priority
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-6">
+                    <h3 className="text-2xl lg:text-3xl font-bold text-white mb-1 drop-shadow-lg">Jewelry</h3>
+                    <p className="text-white/90 text-sm lg:text-base">Handcrafted Elegance</p>
                   </div>
                 </div>
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300"></div>
               </div>
             </Link>
             
             {/* Paintings Category */}
             <Link href="/shop?category=paintings" className="group block">
-              <div className="relative overflow-hidden rounded-xl lg:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                <div className="aspect-square bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center">
-                  <div className="text-center text-white p-6">
-                    <div className="w-16 h-16 lg:w-20 lg:h-20 mx-auto mb-4 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                      <Star className="w-8 h-8 lg:w-10 lg:h-10" />
-                    </div>
-                    <h3 className="text-xl lg:text-2xl font-bold mb-2">Paintings</h3>
-                    <p className="text-white/90 text-sm lg:text-base">Artistic masterpieces</p>
+              <div className="relative overflow-hidden rounded-xl lg:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 h-full">
+                <div className="aspect-square relative">
+                  <Image
+                    src="https://firebasestorage.googleapis.com/v0/b/butterflyauthentique33.firebasestorage.app/o/Images%2FPainting_Ashwini.jpg?alt=media&token=b3b44fcb-8070-4714-9c62-e24918153eef"
+                    alt="Paintings Collection"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    priority
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-6">
+                    <h3 className="text-2xl lg:text-3xl font-bold text-white mb-1 drop-shadow-lg">Paintings</h3>
+                    <p className="text-white/90 text-sm lg:text-base">Artistic Masterpieces</p>
                   </div>
                 </div>
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300"></div>
               </div>
             </Link>
             
             {/* Stoles Category */}
             <Link href="/shop?category=stoles" className="group block">
-              <div className="relative overflow-hidden rounded-xl lg:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                <div className="aspect-square bg-gradient-to-br from-red-400 to-pink-500 flex items-center justify-center">
-                  <div className="text-center text-white p-6">
-                    <div className="w-16 h-16 lg:w-20 lg:h-20 mx-auto mb-4 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                      <ShoppingBag className="w-8 h-8 lg:w-10 lg:h-10" />
-                    </div>
-                    <h3 className="text-xl lg:text-2xl font-bold mb-2">Stoles</h3>
-                    <p className="text-white/90 text-sm lg:text-base">Elegant accessories</p>
+              <div className="relative overflow-hidden rounded-xl lg:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 h-full">
+                <div className="aspect-square relative">
+                  <Image
+                    src="https://firebasestorage.googleapis.com/v0/b/butterflyauthentique33.firebasestorage.app/o/Images%2FStole.jpg?alt=media&token=1a1ec3ce-c765-489f-b7dd-5aa9b1ea618e"
+                    alt="Stoles Collection"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    priority
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-6">
+                    <h3 className="text-2xl lg:text-3xl font-bold text-white mb-1 drop-shadow-lg">Stoles</h3>
+                    <p className="text-white/90 text-sm lg:text-base">Elegant Accessories</p>
                   </div>
                 </div>
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300"></div>
               </div>
             </Link>
           </div>

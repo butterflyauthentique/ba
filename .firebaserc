@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "butterflyauthentique33"
-  }
+    "default": "butterflyauthentique33",
+    "ba_staging": "butterflyauthentique33"
+  },
+  "targets": {},
+  "etags": {}
 }

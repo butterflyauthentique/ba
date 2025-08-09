@@ -13,8 +13,8 @@ import Analytics from '@/components/analytics/GoogleAnalytics'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Butterfly Authentique - Handcrafted Jewelry, Paintings & Stoles',
-  description: 'Discover unique handcrafted jewelry, original paintings, and elegant stoles. Each piece tells a story of artistic excellence and cultural heritage.',
+  title: 'Butterfly Authentique - Designer Fashion Jewelry, Paintings & Stoles',
+  description: 'Discover unique designer fashion jewelry, original paintings, and elegant stoles. Each piece tells a story of artistic excellence and cultural heritage.',
   keywords: 'handcrafted jewelry, paintings, stoles, art, Butterfly Authentique, handmade, authentic',
   authors: [{ name: 'Butterfly Authentique' }],
   creator: 'Butterfly Authentique',
@@ -24,31 +24,33 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://butterflyauthentique33.web.app'),
+  metadataBase: new URL('https://butterflyauthentique.in'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
-    title: 'Butterfly Authentique - Handcrafted Jewelry, Paintings & Stoles',
-    description: 'Discover unique handcrafted jewelry, original paintings, and elegant stoles.',
-    url: 'https://butterflyauthentique33.web.app',
+    title: 'Butterfly Authentique - Designer Fashion Jewelry, Paintings & Stoles',
+    description: 'Discover unique designer fashion jewelry, original paintings, and elegant stoles.',
+    url: 'https://butterflyauthentique.in',
     siteName: 'Butterfly Authentique',
     images: [
       {
-        url: '/logo.png',
+        url: '/social-preview.jpg',
         width: 1200,
         height: 630,
-        alt: 'Butterfly Authentique',
+        alt: 'Butterfly Authentique - Designer Fashion Jewelry, Paintings & Stoles',
+        type: 'image/jpeg',
       },
     ],
     locale: 'en_US',
     type: 'website',
+    // siteName is already set above
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Butterfly Authentique - Handcrafted Jewelry, Paintings & Stoles',
-    description: 'Discover unique handcrafted jewelry, original paintings, and elegant stoles.',
-    images: ['/logo.png'],
+    title: 'Butterfly Authentique - Designer Fashion Jewelry, Paintings & Stoles',
+    description: 'Discover unique designer fashion jewelry, original paintings, and elegant stoles.',
+    images: ['/social-preview.jpg'],
   },
   robots: {
     index: true,

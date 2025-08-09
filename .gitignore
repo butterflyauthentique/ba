@@ -93,3 +93,6 @@ temp/
 
 # TernJS port file
 .tern-port
+
+# Firebase local hosting artifacts
+.firebase/
