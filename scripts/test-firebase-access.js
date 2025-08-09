@@ -5,7 +5,7 @@ const { getStorage, ref, getDownloadURL } = require('firebase/storage');
 // Firebase config
 const firebaseConfig = {
   projectId: 'butterflyauthentique33',
-  authDomain: 'butterflyauthentique33.firebaseapp.com',
+  authDomain: 'butterflyauthentique.in',
   storageBucket: 'butterflyauthentique33.firebasestorage.app'
 };
 

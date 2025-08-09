@@ -6,7 +6,7 @@ const { collection, getDocs } = require('firebase/firestore');
 const { db } = require('../src/lib/firebase');
 
 // Base URL for your site
-const SITE_URL = 'https://butterflyauthentique33.web.app';
+const SITE_URL = 'https://butterflyauthentique.in';
 
 // Static pages that should be included in the sitemap
 const staticPages = [

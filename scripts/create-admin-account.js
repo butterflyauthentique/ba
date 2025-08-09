@@ -5,7 +5,7 @@ const { getFirestore, doc, setDoc, serverTimestamp } = require('firebase/firesto
 // Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-  authDomain: "butterflyauthentique33.firebaseapp.com",
+  authDomain: "butterflyauthentique.in",
   projectId: "butterflyauthentique33",
   storageBucket: "butterflyauthentique33.firebasestorage.app",
   messagingSenderId: "123456789",

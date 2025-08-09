@@ -328,7 +328,7 @@ export class ImageUploadService {
    */
   static extractStoragePathFromUrl(url: string): string | null {
     try {
-      if (!url || !url.includes('firebaseapp.com') || !url.includes('o/')) {
+      if (!url || !url.includes('butterflyauthentique.in') || !url.includes('o/')) {
         return null;
       }
       
