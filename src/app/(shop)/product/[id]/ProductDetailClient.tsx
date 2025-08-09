@@ -60,6 +60,9 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  const availableStock = selectedVariant?.stock ?? product.stock;
+  const isOutOfStock = availableStock <= 0;
+
   // Close share menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -99,12 +102,22 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   useEffect(() => {
     // Set first variant as default if available
     if (product.variants && product.variants.length > 0) {
+      const firstVariant = product.variants[0];
       setSelectedVariant({
-        ...product.variants[0],
-        inStock: true // Default to true since we don't have this info
+        ...firstVariant,
+        inStock: (firstVariant.stock ?? 0) > 0,
       });
+    } else {
+      setSelectedVariant(null);
     }
   }, [product]);
+
+  // Reset quantity to 1 if it exceeds the available stock of the newly selected variant
+  useEffect(() => {
+    if (quantity > availableStock) {
+      setQuantity(1);
+    }
+  }, [availableStock, quantity]);
 
   const handleAddToCart = () => {
     const variantId = selectedVariant?.name || 'default';
@@ -137,8 +150,10 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   };
 
   const handleQuantityChange = (change: number) => {
-    const newQuantity = Math.max(1, quantity + change);
-    setQuantity(newQuantity);
+    const newQuantity = quantity + change;
+    if (newQuantity >= 1 && newQuantity <= availableStock) {
+      setQuantity(newQuantity);
+    }
   };
 
   const handleVariantSelect = (variant: ProductVariant) => {
@@ -486,41 +501,55 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
               </div>
             )}
 
-            {/* Quantity */}
-            <div className="space-y-3">
-              <h3 className="text-lg font-semibold text-gray-900">Quantity</h3>
-              <div className="flex items-center gap-3">
+            {/* Quantity Selector & Stock Status */}
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-medium text-gray-800">Quantity:</span>
+              <div className="flex items-center border border-gray-300 rounded-md">
                 <button
                   onClick={() => handleQuantityChange(-1)}
-                  className="w-10 h-10 border border-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-50"
+                  className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-l-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={quantity <= 1}
+                  aria-label="Decrease quantity"
                 >
                   <Minus className="w-4 h-4" />
                 </button>
-                <span className="w-16 text-center font-medium">{quantity}</span>
+                <span className="px-4 py-1.5 text-lg font-semibold text-gray-900 w-16 text-center tabular-nums">
+                  {isOutOfStock ? 0 : quantity}
+                </span>
                 <button
                   onClick={() => handleQuantityChange(1)}
-                  className="w-10 h-10 border border-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-50"
+                  className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-r-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isOutOfStock || quantity >= availableStock}
+                  aria-label="Increase quantity"
                 >
                   <Plus className="w-4 h-4" />
                 </button>
               </div>
+              {!isOutOfStock ? (
+                <span className="text-sm text-gray-600">
+                  Only <span className="font-bold text-red-600">{availableStock}</span> left in stock!
+                </span>
+              ) : (
+                <span className="text-sm font-bold text-red-600">Out of Stock</span>
+              )}
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-3">
+            {/* Add to Cart & Wishlist */}
+            <div className="flex items-stretch gap-3">
               <button
                 onClick={handleAddToCart}
-                disabled={product.stock === 0}
-                className="flex-1 bg-red-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                disabled={isOutOfStock}
+                className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white font-semibold rounded-md shadow-sm hover:bg-red-700 transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:transform-none"
               >
-                <ShoppingBag className="w-5 h-5 mr-2 inline" />
-                Add to Cart
+                <ShoppingBag className="w-5 h-5" />
+                <span>{isOutOfStock ? 'Out of Stock' : 'Add to Cart'}</span>
               </button>
               <button
                 onClick={handleAddToWishlist}
-                className="w-12 h-12 border border-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors"
+                className={`p-3 border rounded-md shadow-sm transition-colors ${isInWishlist ? 'bg-red-100 border-red-200 text-red-600' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'}`}
+                aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
               >
-                <Heart className={`w-5 h-5 ${isInWishlist ? 'text-red-600 fill-current' : 'text-gray-600'}`} />
+                <Heart className={`w-6 h-6 ${isInWishlist ? 'fill-current' : ''}`} />
               </button>
               {/* Share Button */}
               <div className="relative share-menu-container">
