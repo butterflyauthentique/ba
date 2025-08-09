@@ -1,4 +1,5 @@
 import { forwardRef } from 'react';
+import * as Form from '@radix-ui/react-form';
 
 type InputProps = {
   id: string;
@@ -19,49 +20,41 @@ type InputProps = {
 export const FormField = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
   ({ 
     id, 
+    name,
     label, 
     type = 'text', 
-    error, 
+    error,
     className = '', 
     rows = 4,
     ...props 
   }, ref) => {
-    const inputClassName = `block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm ${error ? 'border-red-500' : 'border-gray-300'} ${className}`;
-    
+    const baseInputClassName = `block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm ${error ? 'border-red-500' : ''}`;
+    const ControlComponent = type === 'textarea' ? 'textarea' : 'input';
+
     return (
-      <div className={className}>
+      <Form.Field name={name} className="w-full">
         {label && (
-          <label 
-            htmlFor={id} 
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
+          <Form.Label className="block text-sm font-medium text-gray-700 mb-1">
             {label}
             {props.required && <span className="text-red-500 ml-1">*</span>}
-          </label>
+          </Form.Label>
         )}
-        
-        {type === 'textarea' ? (
-          <textarea
+        <Form.Control asChild>
+          <ControlComponent
             id={id}
-            ref={ref as React.ForwardedRef<HTMLTextAreaElement>}
-            className={`${inputClassName} resize-none`}
-            rows={rows}
-            {...props as any}
+            ref={ref as any}
+            type={type === 'textarea' ? undefined : type}
+            className={`${baseInputClassName} ${type === 'textarea' ? 'resize-none' : ''} ${className}`}
+            rows={type === 'textarea' ? rows : undefined}
+            {...props}
           />
-        ) : (
-          <input
-            id={id}
-            type={type}
-            ref={ref as React.ForwardedRef<HTMLInputElement>}
-            className={inputClassName}
-            {...props as any}
-          />
-        )}
-        
+        </Form.Control>
         {error && (
-          <p className="mt-1 text-sm text-red-600">{error}</p>
+          <Form.Message className="mt-1 text-sm text-red-600">
+            {error}
+          </Form.Message>
         )}
-      </div>
+      </Form.Field>
     );
   }
 );

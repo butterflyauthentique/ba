@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
+import * as Form from '@radix-ui/react-form';
 import { useRouter } from 'next/navigation';
 import { SubmitButton } from '@/components/forms/SubmitButton';
 import { FormField } from '@/components/forms/FormField';
@@ -124,7 +125,7 @@ export function ContactForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <Form.Root onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {CONTACT_FORM_CONFIG.fields.map((field) => (
           <div 
@@ -141,7 +142,7 @@ export function ContactForm() {
               value={formData[field.name] || ''}
               onChange={handleChange}
               error={errors[field.name]}
-              className="w-full"
+              className="w-full bg-white text-gray-900 border-gray-300 focus:ring-red-500 focus:border-red-500 px-3 py-2"
             />
           </div>
         ))}
@@ -156,6 +157,6 @@ export function ContactForm() {
           {isSubmitting ? 'Sending...' : 'Send Message'}
         </SubmitButton>
       </div>
-    </form>
+    </Form.Root>
   );
 }

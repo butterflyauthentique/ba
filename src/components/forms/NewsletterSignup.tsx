@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
+import * as Form from '@radix-ui/react-form';
 import { toast } from 'react-hot-toast';
 import { SubmitButton } from '@/components/forms/SubmitButton';
 import { FormField } from '@/components/forms/FormField';
@@ -76,41 +77,39 @@ export function NewsletterSignup({ className = '' }: { className?: string }) {
 
   return (
     <div className={className}>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="email-newsletter" className="sr-only">
-            Email address
-          </label>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <div className="flex-grow">
-              <FormField
-                id="email-newsletter"
-                name="email"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (error) setError('');
-                }}
-                error={error}
-                className="w-full"
-                required
-              />
-            </div>
-            <SubmitButton 
-              type="submit" 
-              isLoading={isSubmitting}
-              className="w-full sm:w-auto"
-            >
-              {isSubmitting ? 'Subscribing...' : 'Subscribe'}
-            </SubmitButton>
+      <Form.Root onSubmit={handleSubmit}>
+        <div className="flex items-center space-x-2">
+          <div className="flex-grow">
+            <label htmlFor="email-newsletter" className="sr-only">
+              Email address
+            </label>
+            <FormField
+              id="email-newsletter"
+              name="email"
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (error) setError('');
+              }}
+              error={error}
+              className="w-full bg-white text-gray-900 border-gray-300 focus:ring-red-500 focus:border-red-500 px-3 py-2"
+              required
+            />
           </div>
-          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            We'll never share your email. Unsubscribe anytime.
-          </p>
+          <SubmitButton 
+            type="submit" 
+            isLoading={isSubmitting}
+            className="flex-shrink-0 px-6 py-2"
+          >
+            {isSubmitting ? 'Subscribing...' : 'Subscribe'}
+          </SubmitButton>
         </div>
-      </form>
+        <p className="text-sm text-gray-400 mt-2">
+          We'll never share your email. Unsubscribe anytime.
+        </p>
+      </Form.Root>
     </div>
   );
 }
