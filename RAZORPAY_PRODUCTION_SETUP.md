@@ -63,7 +63,7 @@ Create a new file called `.env.production` (this will be used for production dep
 ```bash
 # Firebase Configuration (Production)
 NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyBTZwEHiG_KmjmZY1wXW3Xane8F4pUqq_E
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=butterflyauthentique33.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=butterflyauthentique.in
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=butterflyauthentique33
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=butterflyauthentique33.firebasestorage.app
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=147808797895
@@ -90,7 +90,7 @@ Update your `.env.local` file for local development:
 ```bash
 # Firebase Configuration
 NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyBTZwEHiG_KmjmZY1wXW3Xane8F4pUqq_E
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=butterflyauthentique33.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=butterflyauthentique.in
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=butterflyauthentique33
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=butterflyauthentique33.firebasestorage.app
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=147808797895

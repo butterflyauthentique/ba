@@ -17,9 +17,9 @@ This guide will help you configure Firebase Authentication with professional ema
 
 **Template Settings:**
 - **Sender name**: `Butterfly Authentique`
-- **Sender email**: `noreply@butterflyauthentique33.firebaseapp.com`
+- **Sender email**: `noreply@butterflyauthentique.in`
 - **Subject**: `Verify your email address - Butterfly Authentique`
-- **Action URL**: `https://butterflyauthentique33.web.app/verify-email`
+- **Action URL**: `https://butterflyauthentique.in/verify-email`
 
 **Email Content:**
 ```html
@@ -61,9 +61,9 @@ The Butterfly Authentique Team</p>
 
 **Template Settings:**
 - **Sender name**: `Butterfly Authentique`
-- **Sender email**: `noreply@butterflyauthentique33.firebaseapp.com`
+- **Sender email**: `noreply@butterflyauthentique.in`
 - **Subject**: `Reset your password - Butterfly Authentique`
-- **Action URL**: `https://butterflyauthentique33.web.app/reset-password-confirm`
+- **Action URL**: `https://butterflyauthentique.in/reset-password-confirm`
 
 **Email Content:**
 ```html

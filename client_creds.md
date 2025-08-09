@@ -17,7 +17,7 @@ This file contains all the credentials, API keys, and configuration details need
 // Firebase Config Object (from Firebase Console)
 const firebaseConfig = {
   apiKey: "AIzaSyBTZwEHiG_KmjmZY1wXW3Xane8F4pUqq_E",
-  authDomain: "butterflyauthentique33.firebaseapp.com",
+  authDomain: "butterflyauthentique.in",
   projectId: "butterflyauthentique33",
   storageBucket: "butterflyauthentique33.firebasestorage.app",
   messagingSenderId: "147808797895",
@@ -255,7 +255,7 @@ const performanceConfig = {
 ```bash
 # Firebase
 NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyBTZwEHiG_KmjmZY1wXW3Xane8F4pUqq_E
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=butterflyauthentique33.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=butterflyauthentique.in
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=butterflyauthentique33
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=butterflyauthentique33.firebasestorage.app
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=147808797895

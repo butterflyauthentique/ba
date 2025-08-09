@@ -25,7 +25,7 @@ Create a `.env.local` file in your project root:
 ```env
 # Firebase Configuration
 NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key_here
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=butterflyauthentique.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=butterflyauthentique.in
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=butterflyauthentique
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=butterflyauthentique.appspot.com
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
