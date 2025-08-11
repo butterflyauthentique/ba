@@ -67,11 +67,14 @@ export default function AdminOrdersPage() {
   const paymentStatuses = ['all', 'pending', 'paid', 'failed', 'refunded'];
 
   const filteredOrders = orders.filter(order => {
-    const matchesSearch = order.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.customer.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = selectedStatus === 'all' || order.status === selectedStatus;
-    const matchesPaymentStatus = selectedPaymentStatus === 'all' || order.paymentStatus === selectedPaymentStatus;
+    const customerName = (order.customer?.name || '').toLowerCase();
+    const orderNumber = (order.orderNumber || '').toLowerCase();
+    const customerEmail = (order.customer?.email || '').toLowerCase();
+    const matchesSearch = customerName.includes(searchTerm.toLowerCase()) ||
+                         orderNumber.includes(searchTerm.toLowerCase()) ||
+                         customerEmail.includes(searchTerm.toLowerCase());
+    const matchesStatus = selectedStatus === 'all' || (order.status || '') === selectedStatus;
+    const matchesPaymentStatus = selectedPaymentStatus === 'all' || (order.paymentStatus || '') === selectedPaymentStatus;
     
     return matchesSearch && matchesStatus && matchesPaymentStatus;
   });
