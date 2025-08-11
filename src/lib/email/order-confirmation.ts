@@ -1,6 +1,6 @@
 import { Order } from '@/types/database';
 import emailService from './email-service';
-import { emailConstants } from '@/config/email';
+import { emailConstants, emailConfig } from '@/config/email';
 
 export async function sendOrderConfirmationEmail(order: Order, customerEmail: string) {
   try {
