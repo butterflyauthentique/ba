@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import ShareButton from '@/components/ShareButton';
+import ShareMenu from '@/components/ShareMenu';
 import { ClientPostService } from '@/lib/services/postService';
 
 type Props = { slug: string };
@@ -88,7 +88,7 @@ export default function BlogPostClient({ slug }: Props) {
               </div>
             </div>
           </div>
-          <ShareButton url={`/blog/${post.slug}`} title={post.title} text={post.excerpt} />
+          <ShareMenu url={`/blog/${post.slug}`} title={post.title} description={post.excerpt} />
         </div>
 
         {/* Content Layout: Small inline cover with wrapped text (classic blog feel) */}

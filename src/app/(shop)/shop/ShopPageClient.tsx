@@ -15,7 +15,7 @@ import {
   X,
   Share2
 } from 'lucide-react';
-import { SiFacebook, SiX, SiWhatsapp } from 'react-icons/si';
+import ShareMenu from '@/components/ShareMenu';
 import { useHydratedStore } from '@/lib/store';
 import { WishlistService } from '@/lib/services/wishlistService';
 import { useAuth } from '@/lib/auth';
@@ -366,49 +366,7 @@ export default function ShopPageClient({
 
                     {/* Share Button (card) */}
                     <div className="absolute top-3 left-3">
-                      <div className="relative group/share">
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            const menu = (e.currentTarget.nextSibling as HTMLElement);
-                            if (menu) {
-                              const isHidden = menu.classList.contains('hidden');
-                              if (isHidden) menu.classList.remove('hidden'); else menu.classList.add('hidden');
-                            }
-                          }}
-                          className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md transition-all hover:bg-gray-50 hover:shadow-lg"
-                          aria-label="Share product"
-                        >
-                          <Share2 className="w-4 h-4 text-gray-700" />
-                        </button>
-                        <div className="hidden absolute left-0 top-10 z-20 w-40 bg-white border border-gray-200 rounded-lg shadow-lg p-2">
-                          {(() => {
-                            const links = shareLinks(`/product/${product.slug || product.id}`, product.name, product.description);
-                            return (
-                              <div className="space-y-1">
-                                <button
-                                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(links.facebook, '_blank', 'noopener'); }}
-                                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50 text-sm text-left"
-                                >
-                                  <SiFacebook className="w-4 h-4 text-[#1877F2]" /> Facebook
-                                </button>
-                                <button
-                                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(links.x, '_blank', 'noopener'); }}
-                                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50 text-sm text-left"
-                                >
-                                  <SiX className="w-4 h-4" /> X (Twitter)
-                                </button>
-                                <button
-                                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(links.whatsapp, '_blank', 'noopener'); }}
-                                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50 text-sm text-left"
-                                >
-                                  <SiWhatsapp className="w-4 h-4 text-[#25D366]" /> WhatsApp
-                                </button>
-                              </div>
-                            );
-                          })()}
-                        </div>
-                      </div>
+                      <ShareMenu url={`/product/${product.slug || product.id}`} title={product.name} description={product.description} />
                     </div>
                     
                     {/* Quick Add to Cart (desktop hover) */}

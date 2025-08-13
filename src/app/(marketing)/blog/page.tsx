@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import ShareButton from '@/components/ShareButton';
+import ShareMenu from '@/components/ShareMenu';
 import { ClientPostService } from '@/lib/services/postService';
 import { useEffect, useState } from 'react';
 
@@ -59,7 +59,7 @@ export default function BlogIndexPage() {
               <article key={p.slug} className="group rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-all bg-white">
                 <div className="p-3 flex items-center justify-between">
                   <div className="text-xs text-gray-500">{new Date(p.publishedAt?.toDate?.() || p.updatedAt?.toDate?.() || Date.now()).toLocaleDateString('en-IN')}</div>
-                  <ShareButton url={`/blog/${p.slug}`} title={p.title} text={p.excerpt} />
+                  <ShareMenu url={`/blog/${p.slug}`} title={p.title} description={p.excerpt} />
                 </div>
                 <Link href={`/blog/${p.slug}`} className="block">
                   <div className="relative aspect-[3/4] bg-gray-100 rounded-t-xl">
