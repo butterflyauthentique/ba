@@ -12,6 +12,7 @@ export default function BlogPostClient({ slug }: Props) {
   const [post, setPost] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -54,6 +55,20 @@ export default function BlogPostClient({ slug }: Props) {
     })();
   }, [slug]);
 
+  // Reading progress
+  useEffect(() => {
+    const onScroll = () => {
+      const el = document.documentElement;
+      const scrollTop = el.scrollTop;
+      const scrollHeight = el.scrollHeight - el.clientHeight;
+      const pct = scrollHeight > 0 ? Math.min(100, Math.max(0, (scrollTop / scrollHeight) * 100)) : 0;
+      setProgress(pct);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   if (loading) {
     return (
       <div className="container py-16">
@@ -76,6 +91,10 @@ export default function BlogPostClient({ slug }: Props) {
 
   return (
     <article className="min-h-screen bg-white">
+      {/* Progress bar */}
+      <div className="fixed left-0 right-0 top-0 z-40 h-1 bg-gray-100">
+        <div className="h-full bg-red-600 transition-[width] duration-150" style={{ width: `${progress}%` }} />
+      </div>
       <div className="container py-10">
         {/* Title + Meta */}
         <div className="flex items-start justify-between gap-4">
@@ -108,7 +127,7 @@ export default function BlogPostClient({ slug }: Props) {
         {/* Content Layout: Small inline cover with wrapped text (classic blog feel) */}
         <div className="mt-8">
           <div className="prose prose-lg max-w-none">
-            <figure className="float-left mr-6 mb-4 w-44 sm:w-56 lg:w-72">
+            <figure className="float-left mr-6 mb-4 w-40 sm:w-56 lg:w-72">
               <div className="relative w-full aspect-[9/16] rounded-lg overflow-hidden border bg-white">
                 <Image
                   src={post.coverImage}
