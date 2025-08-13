@@ -54,7 +54,6 @@ service cloud.firestore {
       allow read: if
         resource.data.status == 'published' ||
         (resource.data.status == 'scheduled' && resource.data.scheduledAt <= request.time);
-
       allow create, update, delete: if isAdmin();
     }
     

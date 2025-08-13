@@ -30,24 +30,16 @@ export class ClientPostService {
       ...post,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-      scheduledAt: post.status === 'scheduled' ? (post.scheduledAt || null) : null,
     });
     return ref.id;
   }
 
   static async updatePost(id: string, patch: Partial<Post>) {
     const ref = doc(db, POSTS, id);
-    const data: any = {
+    await updateDoc(ref, {
       ...patch,
       updatedAt: serverTimestamp(),
-    };
-    if (patch.status === 'published' && !patch.publishedAt) {
-      data.publishedAt = serverTimestamp();
-    }
-    if (patch.status === 'published') {
-      data.scheduledAt = null;
-    }
-    await updateDoc(ref, data);
+    });
   }
 
   static async getPostById(id: string) {
