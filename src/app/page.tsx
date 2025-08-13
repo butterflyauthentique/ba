@@ -40,26 +40,26 @@ export default function HomePage() {
         {/* Hero Content */}
         <div className="container relative z-10">
           {/* Main Hero Text */}
-          <div className="text-center py-12 lg:py-16">
-            <div className="mb-6 lg:mb-8">
+          <div className="text-center py-8 lg:py-12">
+            <div className="mb-4 lg:mb-6">
               {/* Brand Badge */}
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6 border border-white/20">
                 <Sparkles className="w-4 h-4 text-yellow-300" />
                 <span className="text-sm font-medium">Handcrafted with Love</span>
               </div>
               
-              <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-4 lg:mb-6 drop-shadow-lg leading-tight">
+              <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-3 lg:mb-4 drop-shadow-lg leading-tight">
                 Butterfly{' '}
                 <span className="text-yellow-300 font-serif">Authentique</span>
               </h1>
-              <p className="text-lg sm:text-xl lg:text-2xl text-white/90 mb-6 lg:mb-8 max-w-3xl mx-auto drop-shadow-md leading-relaxed">
+              <p className="text-base sm:text-lg lg:text-xl text-white/90 mb-5 lg:mb-6 max-w-3xl mx-auto drop-shadow-md leading-relaxed">
                 Handcrafted elegance meets artistic expression. Discover unique fashion jewelry, 
                 paintings, and stoles that tell your story.
               </p>
             </div>
             
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 lg:mb-16">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8 lg:mb-10">
               <Link 
                 href="/shop" 
                 className="btn-primary bg-white text-red-600 border-white hover:bg-red-50 inline-flex items-center justify-center gap-2 shadow-lg px-8 py-4 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105"
@@ -77,7 +77,7 @@ export default function HomePage() {
           </div>
 
           {/* 3 Hero Image Sections */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 pb-16 lg:pb-20">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 pb-10 lg:pb-14">
             {/* Hero Section 1 - Paintings */}
             <Link href="/shop?category=paintings" className="group block">
               <div className="relative overflow-hidden rounded-2xl lg:rounded-3xl shadow-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-3xl">
