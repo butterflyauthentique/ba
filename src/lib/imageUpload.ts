@@ -66,6 +66,126 @@ export interface ProductImageStructure {
  * Handles image upload, organization, optimization, and management
  */
 export class ImageUploadService {
+  /**
+   * Upload optimized blog image with optional aspect ratio and size constraints
+   */
+  static async uploadBlogImageOptimized(
+    file: File,
+    key: string,
+    userId: string,
+    options?: {
+      // aspect width/height. Example for 9:16 => { width: 9, height: 16 }
+      aspect?: { width: number; height: number };
+      maxBytes?: number; // enforce output <= this size
+      targetLongEdge?: number; // longest side in pixels
+      format?: 'image/jpeg' | 'image/webp';
+    }
+  ): Promise<ImageMetadata> {
+    const aspect = options?.aspect;
+    const maxBytes = options?.maxBytes ?? 200 * 1024; // default 200KB
+    const targetLongEdge = options?.targetLongEdge ?? 1600; // default 1600px long edge
+    const format = options?.format ?? 'image/webp';
+
+    // Validate file
+    this.validateFile(file);
+
+    // Read original into HTMLImageElement
+    const originalUrl = URL.createObjectURL(file);
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = reject;
+      image.src = originalUrl;
+    });
+
+    // Determine target dimensions while maintaining/cropping to aspect if provided
+    let targetWidth: number;
+    let targetHeight: number;
+    if (aspect) {
+      const desiredRatio = aspect.width / aspect.height; // e.g., 9/16
+      const currentRatio = img.width / img.height;
+      // Determine crop rectangle to achieve desired ratio via center-crop
+      let cropWidth = img.width;
+      let cropHeight = img.height;
+      if (currentRatio > desiredRatio) {
+        // too wide → crop width
+        cropWidth = Math.round(img.height * desiredRatio);
+        cropHeight = img.height;
+      } else if (currentRatio < desiredRatio) {
+        // too tall → crop height
+        cropWidth = img.width;
+        cropHeight = Math.round(img.width / desiredRatio);
+      }
+
+      // scale so that longer edge becomes targetLongEdge
+      const scale = targetLongEdge / Math.max(cropWidth, cropHeight);
+      targetWidth = Math.round(cropWidth * scale);
+      targetHeight = Math.round(cropHeight * scale);
+
+      // Draw cropped and scaled onto canvas
+      const sx = Math.floor((img.width - cropWidth) / 2);
+      const sy = Math.floor((img.height - cropHeight) / 2);
+      const canvas = document.createElement('canvas');
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(img, sx, sy, cropWidth, cropHeight, 0, 0, targetWidth, targetHeight);
+
+      // Compress iteratively to meet size constraint
+      const blob = await this.compressToTarget(canvas, format, maxBytes);
+      const timestamp = Date.now();
+      const fileExtension = format === 'image/webp' ? 'webp' : 'jpg';
+      const fileName = `${key}_${timestamp}.${fileExtension}`;
+      const blogRef = ref(storage, `${STORAGE_FOLDERS.BLOG}/${key}/${fileName}`);
+      const snapshot = await uploadBytes(blogRef, blob);
+      const url = await getDownloadURL(snapshot.ref);
+
+      return {
+        id: `${key}_${timestamp}`,
+        originalName: file.name,
+        fileName,
+        fileSize: blob.size,
+        mimeType: blob.type,
+        width: targetWidth,
+        height: targetHeight,
+        url,
+        uploadedAt: new Date(),
+        uploadedBy: userId,
+        alt: file.name
+      };
+    } else {
+      // No enforced aspect: scale longest edge to targetLongEdge
+      const ratio = Math.min(targetLongEdge / img.width, targetLongEdge / img.height, 1);
+      targetWidth = Math.round(img.width * ratio);
+      targetHeight = Math.round(img.height * ratio);
+      const canvas = document.createElement('canvas');
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(img, 0, 0, targetWidth, targetHeight);
+      const blob = await this.compressToTarget(canvas, format, maxBytes);
+      const timestamp = Date.now();
+      const fileExtension = format === 'image/webp' ? 'webp' : 'jpg';
+      const fileName = `${key}_${timestamp}.${fileExtension}`;
+      const blogRef = ref(storage, `${STORAGE_FOLDERS.BLOG}/${key}/${fileName}`);
+      const snapshot = await uploadBytes(blogRef, blob);
+      const url = await getDownloadURL(snapshot.ref);
+
+      return {
+        id: `${key}_${timestamp}`,
+        originalName: file.name,
+        fileName,
+        fileSize: blob.size,
+        mimeType: blob.type,
+        width: targetWidth,
+        height: targetHeight,
+        url,
+        uploadedAt: new Date(),
+        uploadedBy: userId,
+        alt: file.name
+      };
+    }
+  }
   
   /**
    * Upload product image with proper organization
@@ -432,6 +552,26 @@ export class ImageUploadService {
       img.onerror = reject;
       img.src = URL.createObjectURL(file);
     });
+  }
+
+  /**
+   * Compress canvas output under a target byte size by adjusting quality
+   */
+  private static async compressToTarget(canvas: HTMLCanvasElement, format: 'image/webp' | 'image/jpeg', maxBytes: number): Promise<Blob> {
+    let quality = 0.9;
+    let blob: Blob | null = null;
+    for (let i = 0; i < 8; i++) {
+      blob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob((b) => resolve(b), format, quality);
+      });
+      if (!blob) throw new Error('Failed to create image blob');
+      if (blob.size <= maxBytes) return blob;
+      quality -= 0.1;
+      if (quality <= 0.2) break;
+    }
+    // If still larger, return last blob anyway
+    if (!blob) throw new Error('Failed to create image blob');
+    return blob;
   }
   
   /**

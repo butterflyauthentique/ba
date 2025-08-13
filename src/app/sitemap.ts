@@ -1,11 +1,12 @@
 import { MetadataRoute } from 'next'
+import { BLOG_POSTS } from '@/content/blog/posts'
 
 export const dynamic = 'force-static'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://butterflyauthentique33.web.app'
   
-  return [
+  const staticEntries: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
       lastModified: new Date(),
@@ -55,4 +56,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.3,
     },
   ]
+
+  const blogEntries: MetadataRoute.Sitemap = [
+    {
+      url: `${baseUrl}/blog`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.6,
+    },
+  ]
+
+  return [...staticEntries, ...blogEntries]
 } 

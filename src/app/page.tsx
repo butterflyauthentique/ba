@@ -2,6 +2,9 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Heart, Star, ShoppingBag, Sparkles, Award, Shield, ChevronRight } from 'lucide-react';
+import { ServerProductService } from '@/lib/services/productService';
+import { Product } from '@/types/database';
+  import { NewsletterSignup } from '@/components/forms/NewsletterSignup';
 
 export const metadata: Metadata = {
   title: 'Butterfly Authentique - Handcrafted Jewelry, Paintings & Stoles',
@@ -25,7 +28,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  const allProducts: Product[] = await ServerProductService.getProducts();
+  const newArrivals: Product[] = allProducts.slice(0, 8);
+  const categories: { key: string; label: string; href: string }[] = [
+    { key: 'all', label: 'All', href: '/shop?category=all' },
+    { key: 'jewelry', label: 'Jewelry', href: '/shop?category=jewelry' },
+    { key: 'paintings', label: 'Paintings', href: '/shop?category=paintings' },
+    { key: 'stoles', label: 'Stoles', href: '/shop?category=stoles' },
+  ];
   return (
     <div className="min-h-screen">
       {/* Hero Section - 3 Section Layout */}
@@ -39,8 +50,8 @@ export default function HomePage() {
         
         {/* Hero Content */}
         <div className="container relative z-10">
-          {/* Main Hero Text */}
-          <div className="text-center py-8 lg:py-12">
+          {/* Main Hero Text (compact) */}
+          <div className="text-center py-6 lg:py-8">
             <div className="mb-4 lg:mb-6">
               {/* Brand Badge */}
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6 border border-white/20">
@@ -52,14 +63,14 @@ export default function HomePage() {
                 Butterfly{' '}
                 <span className="text-yellow-300 font-serif">Authentique</span>
               </h1>
-              <p className="text-base sm:text-lg lg:text-xl text-white/90 mb-5 lg:mb-6 max-w-3xl mx-auto drop-shadow-md leading-relaxed">
+              <p className="text-base sm:text-lg lg:text-xl text-white/90 mb-4 lg:mb-5 max-w-3xl mx-auto drop-shadow-md leading-relaxed">
                 Handcrafted elegance meets artistic expression. Discover unique fashion jewelry, 
                 paintings, and stoles that tell your story.
               </p>
             </div>
             
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8 lg:mb-10">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6 lg:mb-8">
               <Link 
                 href="/shop" 
                 className="btn-primary bg-white text-red-600 border-white hover:bg-red-50 inline-flex items-center justify-center gap-2 shadow-lg px-8 py-4 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105"
@@ -76,8 +87,25 @@ export default function HomePage() {
             </div>
           </div>
 
+          {/* Category chips (mobile-first) */}
+          <div className="container relative z-10">
+            <div className="-mx-4 px-4 pb-4">
+              <div className="flex gap-3 overflow-x-auto no-scrollbar py-1">
+                {categories.map((c) => (
+                  <Link
+                    key={c.key}
+                    href={c.href}
+                    className="whitespace-nowrap px-4 py-2 rounded-full text-sm bg-white/10 border border-white/20 hover:bg-white/15"
+                  >
+                    {c.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+
           {/* 3 Hero Image Sections */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 pb-10 lg:pb-14">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 pb-8 lg:pb-10">
             {/* Hero Section 1 - Paintings */}
             <Link href="/shop?category=paintings" className="group block">
               <div className="relative overflow-hidden rounded-2xl lg:rounded-3xl shadow-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-3xl">
@@ -208,8 +236,39 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* New Arrivals band above the fold continuation */}
+      <section className="py-10 lg:py-14 bg-white">
+        <div className="container">
+          <div className="flex items-end justify-between mb-6">
+            <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">New Arrivals</h2>
+            <Link href="/shop" className="text-red-600 hover:text-red-700 font-medium">View all</Link>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
+            {newArrivals.map((p) => (
+              <Link href={`/product/${p.slug || p.id}`} key={p.id} className="group block">
+                <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-gray-100">
+                  <Image
+                    src={typeof p.images?.[0] === 'string' ? (p.images?.[0] as any) : (p.images?.[0]?.url || '/logo.png')}
+                    alt={p.name}
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    priority={false}
+                  />
+                </div>
+                <div className="mt-2">
+                  <div className="text-[10px] sm:text-xs text-red-600 font-medium uppercase tracking-wider">{p.category}</div>
+                  <div className="text-sm sm:text-base font-medium text-gray-900 line-clamp-2">{p.name}</div>
+                  <div className="text-sm sm:text-base text-gray-700">₹{(p.price || 0).toLocaleString()}</div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Categories Section */}
-      <section className="py-16 lg:py-20 bg-white">
+      <section className="py-14 lg:py-16 bg-white">
         <div className="container">
           <div className="text-center mb-12 lg:mb-16">
             <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
@@ -293,6 +352,10 @@ export default function HomePage() {
           <p className="text-lg lg:text-xl text-white/90 mb-8 max-w-2xl mx-auto">
             Join thousands of customers who have found their unique style with Butterfly Authentique.
           </p>
+          {/* Inline email capture */}
+          <div className="max-w-xl mx-auto mb-8">
+            <NewsletterSignup />
+          </div>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link 
               href="/shop" 

@@ -88,6 +88,7 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+        <link rel="alternate" type="application/rss+xml" title="Butterfly Authentique Journal" href="/blog/rss.xml" />
         {/* Organization Schema */}
         <script
           type="application/ld+json"

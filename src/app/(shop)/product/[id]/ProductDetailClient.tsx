@@ -21,13 +21,12 @@ import {
   Calendar,
   Tag,
   Share2,
-  Facebook,
-  Twitter,
   Instagram,
   Mail,
   Copy,
   Check
 } from 'lucide-react';
+import { SiFacebook, SiX, SiWhatsapp } from 'react-icons/si';
 import { useHydratedStore } from '@/lib/store';
 import { WishlistService } from '@/lib/services/wishlistService';
 import { useAuth } from '@/lib/auth';
@@ -571,14 +570,14 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                           onClick={shareToFacebook}
                           className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
                         >
-                          <Facebook className="w-5 h-5 text-blue-600" />
+                          <SiFacebook className="w-5 h-5 text-[#1877F2]" />
                           <span className="text-sm text-gray-700">Share on Facebook</span>
                         </button>
                         <button
                           onClick={shareToTwitter}
                           className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
                         >
-                          <Twitter className="w-5 h-5 text-blue-400" />
+                          <SiX className="w-5 h-5" />
                           <span className="text-sm text-gray-700">Share on Twitter</span>
                         </button>
                         <button
@@ -592,9 +591,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                           onClick={shareToWhatsApp}
                           className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
                         >
-                          <div className="w-5 h-5 bg-green-500 rounded flex items-center justify-center">
-                            <span className="text-white text-xs font-bold">W</span>
-                          </div>
+                          <SiWhatsapp className="w-5 h-5 text-[#25D366]" />
                           <span className="text-sm text-gray-700">Share on WhatsApp</span>
                         </button>
                         <button

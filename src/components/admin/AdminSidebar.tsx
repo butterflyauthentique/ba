@@ -52,6 +52,12 @@ const adminNavItems = [
     description: 'Sales and performance'
   },
   {
+    name: 'Posts',
+    href: '/admin/posts',
+    icon: LayoutDashboard,
+    description: 'Blog posts management'
+  },
+  {
     name: 'Admins',
     href: '/admin/admins',
     icon: Shield,

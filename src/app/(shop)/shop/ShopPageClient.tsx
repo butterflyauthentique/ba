@@ -11,8 +11,11 @@ import {
   ShoppingBag, 
   Star,
   Plus,
-  Minus
+  Minus,
+  X,
+  Share2
 } from 'lucide-react';
+import { SiFacebook, SiX, SiWhatsapp } from 'react-icons/si';
 import { useHydratedStore } from '@/lib/store';
 import { WishlistService } from '@/lib/services/wishlistService';
 import { useAuth } from '@/lib/auth';
@@ -34,6 +37,9 @@ export default function ShopPageClient({
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -126,6 +132,16 @@ export default function ShopPageClient({
     toast.success(`${product.name} added to cart`);
   };
 
+  const shareLinks = (href: string, title: string, description?: string) => {
+    const url = typeof window !== 'undefined' ? `${window.location.origin}${href}` : href;
+    const text = description || title;
+    return {
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+      x: `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`,
+      whatsapp: `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}%20${encodeURIComponent(url)}`,
+    };
+  };
+
   // Load wishlist items for current user
   useEffect(() => {
     const loadWishlistItems = async () => {
@@ -180,91 +196,124 @@ export default function ShopPageClient({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-red-600 to-red-700 text-white py-16">
+      {/* Compact Header */}
+      <section className="bg-gradient-to-r from-red-600 to-red-700 text-white py-8">
         <div className="container">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">Our Collection</h1>
-            <p className="text-xl text-white/90 max-w-2xl mx-auto">
-              Discover unique handcrafted jewelry, stunning paintings, and elegant stoles. 
-              Each piece tells a story of artistic excellence and cultural heritage.
-            </p>
+          <div className="flex items-end justify-between">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold">Shop</h1>
+              <p className="text-sm sm:text-base text-white/90 mt-1">Discover handcrafted pieces</p>
+            </div>
+            <div className="text-right">
+              <span className="text-sm sm:text-base text-white/90">{filteredProducts.length} results</span>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Filters and Search */}
-      <section className="py-8 bg-white border-b">
+      {/* Sticky Utility Row */}
+      <div className="sticky top-16 z-30 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-b">
         <div className="container">
-          <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
-            {/* Search */}
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* Category Filter */}
-            <div className="flex items-center gap-4">
-              <label className="text-sm font-medium text-gray-700">Category:</label>
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-              >
-                {categories.map((category) => (
-                  <option 
-                    key={category} 
-                    value={category}
-                  >
-                    {formatCategory(category)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Sort */}
-            <div className="flex items-center gap-4">
-              <label className="text-sm font-medium text-gray-700">Sort by:</label>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-              >
-                <option value="name">Name</option>
-                <option value="price">Price</option>
-                <option value="rating">Rating</option>
-              </select>
-            </div>
+          <div className="flex items-center gap-3 py-3">
+            <button
+              aria-label="Open filters"
+              onClick={() => setIsFilterOpen(true)}
+              className="flex-1 inline-flex items-center justify-center gap-2 border border-gray-300 rounded-lg px-3 py-2 text-sm font-medium text-gray-700"
+            >
+              <Filter className="w-4 h-4" />
+              Filter
+            </button>
+            <button
+              aria-label="Sort products"
+              onClick={() => setIsSortOpen(true)}
+              className="flex-1 inline-flex items-center justify-center gap-2 border border-gray-300 rounded-lg px-3 py-2 text-sm font-medium text-gray-700"
+            >
+              <span>Sort</span>
+            </button>
+            <button
+              aria-label="Search products"
+              onClick={() => setIsSearchOpen((s) => !s)}
+              className="flex-1 inline-flex items-center justify-center gap-2 border border-gray-300 rounded-lg px-3 py-2 text-sm font-medium text-gray-700"
+            >
+              <Search className="w-4 h-4" />
+              Search
+            </button>
           </div>
+          {isSearchOpen && (
+            <div className="pb-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+          )}
+          {/* Active filter chips */}
+          {(selectedCategory !== 'all' || (searchTerm && searchTerm.trim() !== '')) && (
+            <div className="flex flex-wrap items-center gap-2 pb-3">
+              {selectedCategory !== 'all' && (
+                <button
+                  onClick={() => setSelectedCategory('all')}
+                  className="inline-flex items-center gap-2 bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-xs"
+                >
+                  {formatCategory(selectedCategory)}
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+              {searchTerm && searchTerm.trim() !== '' && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="inline-flex items-center gap-2 bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-xs"
+                >
+                  “{searchTerm}”
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  setSelectedCategory('all');
+                  setSearchTerm('');
+                }}
+                className="ml-auto text-xs text-red-600 font-medium"
+              >
+                Clear all
+              </button>
+            </div>
+          )}
         </div>
-      </section>
+      </div>
 
       {/* Products Grid */}
-      <section className="py-12">
+      <section className="py-6 sm:py-8">
         <div className="container">
           {loading ? (
-            <div className="text-center py-16">
-              <p>Loading products...</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="aspect-[3/4] rounded-xl bg-gray-200" />
+                  <div className="h-3 bg-gray-200 rounded mt-3 w-3/4" />
+                  <div className="h-3 bg-gray-200 rounded mt-2 w-1/2" />
+                </div>
+              ))}
             </div>
           ) : sortedProducts.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
               {sortedProducts.map((product) => (
                 <Link href={`/product/${product.slug || product.id}`} key={product.id} className="product-card group">
                   {/* Product Image */}
-                  <div className="relative aspect-square bg-gray-100 overflow-hidden rounded-t-xl">
+                  <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden rounded-t-xl">
                     {product.images && product.images.length > 0 ? (
                       <Image
                         src={typeof product.images[0] === 'string' ? product.images[0] : product.images[0]?.url || ''}
                         alt={product.name}
                         fill
                         className="object-cover transition-transform duration-300 group-hover:scale-105"
-                        sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                         priority={false}
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
@@ -310,18 +359,65 @@ export default function ShopPageClient({
                         e.preventDefault();
                         handleAddToWishlist(product);
                       }}
-                      className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50"
+                      className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md transition-all hover:bg-red-50 hover:shadow-lg"
                     >
                       <Heart className={`w-4 h-4 ${wishlistItems.has(product.id) ? 'text-red-600 fill-current' : 'text-gray-600'}`} />
                     </button>
+
+                    {/* Share Button (card) */}
+                    <div className="absolute top-3 left-3">
+                      <div className="relative group/share">
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const menu = (e.currentTarget.nextSibling as HTMLElement);
+                            if (menu) {
+                              const isHidden = menu.classList.contains('hidden');
+                              if (isHidden) menu.classList.remove('hidden'); else menu.classList.add('hidden');
+                            }
+                          }}
+                          className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md transition-all hover:bg-gray-50 hover:shadow-lg"
+                          aria-label="Share product"
+                        >
+                          <Share2 className="w-4 h-4 text-gray-700" />
+                        </button>
+                        <div className="hidden absolute left-0 top-10 z-20 w-40 bg-white border border-gray-200 rounded-lg shadow-lg p-2">
+                          {(() => {
+                            const links = shareLinks(`/product/${product.slug || product.id}`, product.name, product.description);
+                            return (
+                              <div className="space-y-1">
+                                <button
+                                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(links.facebook, '_blank', 'noopener'); }}
+                                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50 text-sm text-left"
+                                >
+                                  <SiFacebook className="w-4 h-4 text-[#1877F2]" /> Facebook
+                                </button>
+                                <button
+                                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(links.x, '_blank', 'noopener'); }}
+                                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50 text-sm text-left"
+                                >
+                                  <SiX className="w-4 h-4" /> X (Twitter)
+                                </button>
+                                <button
+                                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(links.whatsapp, '_blank', 'noopener'); }}
+                                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50 text-sm text-left"
+                                >
+                                  <SiWhatsapp className="w-4 h-4 text-[#25D366]" /> WhatsApp
+                                </button>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      </div>
+                    </div>
                     
-                    {/* Quick Add to Cart */}
+                    {/* Quick Add to Cart (desktop hover) */}
                     <button
                       onClick={(e) => {
                         e.preventDefault();
                         handleAddToCart(product);
                       }}
-                      className="absolute bottom-3 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
+                      className="hidden sm:inline-flex absolute bottom-3 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
                     >
                       Quick Add
                     </button>
@@ -330,23 +426,23 @@ export default function ShopPageClient({
                   {/* Product Content */}
                   <div className="product-card__content">
                     {/* Category Badge */}
-                    <div className="text-xs font-medium text-red-600 uppercase tracking-wider mb-2">
+                    <div className="text-[10px] sm:text-xs font-medium text-red-600 uppercase tracking-wider mb-1 sm:mb-2">
                       {product.category}
                     </div>
                     
-                    <h3 className="product-card__title line-clamp-2">{product.name}</h3>
-                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                    <h3 className="product-card__title line-clamp-2 text-sm sm:text-base">{product.name}</h3>
+                    <p className="hidden sm:block text-gray-600 text-sm mb-3 line-clamp-2">
                       {product.description}
                     </p>
                     
                     {/* Rating */}
-                    <div className="flex items-center gap-1 mb-3">
+                    <div className="hidden sm:flex items-center gap-1 mb-3">
                       <Star className="w-4 h-4 text-yellow-400 fill-current" />
                       <span className="text-sm font-medium text-gray-900">{product.rating || 0}</span>
                       <span className="text-sm text-gray-500">({product.reviews || 0})</span>
                     </div>
                     
-                    <div className="product-card__price">₹{product.price.toLocaleString()}</div>
+                    <div className="product-card__price text-sm sm:text-base">₹{product.price.toLocaleString()}</div>
                     
                     <div className="product-card__actions">
                       <button 
@@ -354,7 +450,7 @@ export default function ShopPageClient({
                           e.preventDefault();
                           handleAddToCart(product);
                         }}
-                        className="btn-primary text-sm px-4 py-2 flex-1"
+                        className="btn-primary text-xs sm:text-sm px-3 py-2 sm:px-4 sm:py-2 flex-1"
                       >
                         Add to Cart
                       </button>
@@ -370,6 +466,84 @@ export default function ShopPageClient({
           )}
         </div>
       </section>
+
+      {/* Filter Drawer */}
+      {isFilterOpen && (
+        <div className="fixed inset-0 z-40">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setIsFilterOpen(false)} />
+          <div className="absolute inset-x-0 bottom-0 top-0 bg-white rounded-t-2xl sm:rounded-none sm:right-0 sm:top-0 sm:bottom-0 sm:w-96 sm:ml-auto shadow-xl overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b">
+              <h3 className="text-base font-semibold">Filters</h3>
+              <button aria-label="Close filters" onClick={() => setIsFilterOpen(false)} className="p-2 rounded hover:bg-gray-100">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div>
+                <h4 className="text-sm font-medium text-gray-900 mb-2">Category</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {categories.map((category) => (
+                    <button
+                      key={category}
+                      onClick={() => setSelectedCategory(category)}
+                      className={`px-3 py-2 rounded border text-sm ${selectedCategory === category ? 'bg-red-50 border-red-300 text-red-700' : 'border-gray-300 text-gray-700'}`}
+                    >
+                      {formatCategory(category)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="sticky bottom-0 bg-white border-t p-4 flex items-center justify-between gap-3">
+              <button
+                onClick={() => setSelectedCategory('all')}
+                className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium flex-1"
+              >
+                Reset
+              </button>
+              <button
+                onClick={() => setIsFilterOpen(false)}
+                className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium flex-1"
+              >
+                Show results ({filteredProducts.length})
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sort Sheet */}
+      {isSortOpen && (
+        <div className="fixed inset-0 z-40">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setIsSortOpen(false)} />
+          <div className="absolute inset-x-0 bottom-0 bg-white rounded-t-2xl shadow-2xl">
+            <div className="flex items-center justify-between px-4 py-3 border-b">
+              <h3 className="text-base font-semibold">Sort by</h3>
+              <button aria-label="Close sort" onClick={() => setIsSortOpen(false)} className="p-2 rounded hover:bg-gray-100">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-2">
+              {[
+                { key: 'name', label: 'Name' },
+                { key: 'price', label: 'Price' },
+                { key: 'rating', label: 'Rating' },
+              ].map((opt) => (
+                <button
+                  key={opt.key}
+                  onClick={() => {
+                    setSortBy(opt.key);
+                    setIsSortOpen(false);
+                  }}
+                  className={`w-full text-left px-4 py-3 text-sm rounded ${sortBy === opt.key ? 'bg-red-50 text-red-700' : 'hover:bg-gray-50'}`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

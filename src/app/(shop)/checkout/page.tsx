@@ -30,6 +30,7 @@ import {
 } from '@/lib/razorpay';
 import { isValidEmail, isValidPhone, formatPhoneNumber } from '@/lib/utils';
 import toast from 'react-hot-toast';
+import { submitHubSpotForm } from '@/lib/hubspot';
 
 interface CheckoutForm {
   firstName: string;
@@ -51,6 +52,7 @@ export default function CheckoutPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [products, setProducts] = useState<any[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+  const [newsletterOptIn, setNewsletterOptIn] = useState(true);
   const [formData, setFormData] = useState<CheckoutForm>({
     firstName: '',
     lastName: '',
@@ -165,6 +167,19 @@ export default function CheckoutPage() {
       
       if (!orderResponse.success) {
         throw new Error('Failed to create order');
+      }
+
+      // Newsletter opt-in (non-blocking, before opening gateway)
+      if (newsletterOptIn && isValidEmail(formData.email)) {
+        submitHubSpotForm({
+          portalId: process.env.NEXT_PUBLIC_HUBSPOT_PORTAL_ID || '',
+          formGuid: process.env.NEXT_PUBLIC_HUBSPOT_NEWSLETTER_FORM_ID || '',
+          fields: [
+            { name: 'email', value: formData.email },
+            { name: 'firstname', value: formData.firstName },
+            { name: 'lastname', value: formData.lastName },
+          ],
+        }).catch((e) => console.warn('Newsletter opt-in failed (non-blocking):', e));
       }
 
       // Initialize Razorpay checkout
@@ -401,6 +416,18 @@ export default function CheckoutPage() {
                       placeholder="Enter email address"
                     />
                   </div>
+                  <label className="mt-3 flex items-start gap-3 text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      className="mt-1 h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                      checked={newsletterOptIn}
+                      onChange={(e) => setNewsletterOptIn(e.target.checked)}
+                    />
+                    <span>
+                      Send me updates, new arrivals and offers. Unsubscribe anytime. See our{' '}
+                      <a href="/privacy-policy" className="underline text-red-600" target="_blank" rel="noreferrer">Privacy Policy</a>.
+                    </span>
+                  </label>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">

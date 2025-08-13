@@ -83,6 +83,14 @@ export default function Header() {
               About
             </Link>
             <Link 
+              href="/blog" 
+              className={`text-sm font-medium transition-colors ${
+                pathname.startsWith('/blog') ? 'text-rose-600' : 'text-gray-700 hover:text-rose-600'
+              }`}
+            >
+              Blog
+            </Link>
+            <Link 
               href="/contact" 
               className={`text-sm font-medium transition-colors ${
                 pathname === '/contact' ? 'text-rose-600' : 'text-gray-700 hover:text-rose-600'
@@ -220,6 +228,15 @@ export default function Header() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 About
+              </Link>
+              <Link 
+                href="/blog" 
+                className={`block text-sm font-medium transition-colors ${
+                  pathname.startsWith('/blog') ? 'text-rose-600' : 'text-gray-700 hover:text-rose-600'
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Blog
               </Link>
               <Link 
                 href="/contact" 
