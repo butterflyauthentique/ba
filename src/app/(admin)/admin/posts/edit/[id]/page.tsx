@@ -45,7 +45,10 @@ export default function EditPostPage() {
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Slug</label>
-          <input className="input w-full" value={post.slug} onChange={(e) => update('slug', e.target.value)} />
+          <input className="input w-full" value={post.slug} onChange={(e) => update('slug', e.target.value)} disabled={post.status === 'published'} />
+          {post.status === 'published' && (
+            <p className="text-xs text-gray-500 mt-1">Slug is locked after publish.</p>
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Excerpt</label>
@@ -123,7 +126,14 @@ export default function EditPostPage() {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Scheduled At (ISO)</label>
-            <input className="input w-full" placeholder="2025-08-13T10:00:00.000Z" onChange={(e) => update('scheduledAt' as any, (e.target.value ? (new Date(e.target.value) as any) : null))} />
+            <input className="input w-full" placeholder="2025-08-13T10:00:00.000Z" value={post.scheduledAt?.toDate?.()?.toISOString?.().slice(0, 19) || ''} onChange={(e) => update('scheduledAt' as any, (e.target.value ? (new Date(e.target.value) as any) : null))} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Published At</label>
+            <input className="input w-full" value={post.publishedAt?.toDate?.()?.toISOString?.().slice(0, 19) || ''} disabled />
+            {post.status === 'published' && !post.publishedAt && (
+              <p className="text-xs text-gray-500 mt-1">Will be set automatically on save.</p>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-3">

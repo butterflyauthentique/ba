@@ -28,7 +28,13 @@ export default function NewPostPage() {
   const submit = async () => {
     setSaving(true);
     try {
-      const id = await ClientPostService.createPost(form as any);
+      // Ensure safe defaults
+      const payload: any = {
+        ...form,
+        status: form.status || 'draft',
+        scheduledAt: form.status === 'scheduled' ? (form.scheduledAt || null) : null,
+      };
+      const id = await ClientPostService.createPost(payload as any);
       router.push(`/admin/posts/edit/${id}`);
     } finally {
       setSaving(false);
