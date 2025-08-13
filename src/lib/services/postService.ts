@@ -311,4 +311,41 @@ export async function fetchPublishedPostsViaREST(limitCount = 50): Promise<Post[
   }
 }
 
+export async function fetchPostByIdViaREST(id: string): Promise<Post | null> {
+  try {
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+    const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+    if (!projectId || !id) return null;
+    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/posts/${id}${apiKey ? `?key=${apiKey}` : ''}`;
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const doc = await res.json();
+    const f = doc.fields || {};
+    const get = (k: string) => f[k];
+    const str = (v: any) => v?.stringValue ?? '';
+    const ts = (v: any) => (v?.timestampValue ? (Timestamp.fromDate(new Date(v.timestampValue)) as any) : undefined);
+    const post: Post = {
+      id: id,
+      title: str(get('title')),
+      slug: str(get('slug')),
+      excerpt: str(get('excerpt')),
+      coverImage: str(get('coverImage')),
+      contentHtml: str(get('contentHtml')),
+      tags: (get('tags')?.arrayValue?.values || []).map((x: any) => x.stringValue) || [],
+      category: str(get('category')) || undefined,
+      readingTime: Number(get('readingTime')?.integerValue || get('readingTime')?.doubleValue || 0) || undefined,
+      authorName: str(get('authorName')),
+      authorPhotoUrl: str(get('authorPhotoUrl')) || undefined,
+      status: str(get('status')) as PostStatus,
+      publishedAt: ts(get('publishedAt')),
+      scheduledAt: ts(get('scheduledAt')),
+      createdAt: ts(get('createdAt')),
+      updatedAt: ts(get('updatedAt')),
+    };
+    return post;
+  } catch {
+    return null;
+  }
+}
+
 

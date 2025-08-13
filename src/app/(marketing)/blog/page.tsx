@@ -63,7 +63,7 @@ export default function BlogIndexPage() {
                   <div className="text-xs text-gray-500">{new Date(p.publishedAt?.toDate?.() || p.updatedAt?.toDate?.() || Date.now()).toLocaleDateString('en-IN')}</div>
                   <ShareMenu url={`/blog/${p.slug}`} title={p.title} description={p.excerpt} />
                 </div>
-                <Link href={`/blog/${p.slug}`} className="block">
+                <Link href={`/blog/${p.slug}?id=${p.id || ''}`} className="block">
                   <div className="relative aspect-[3/4] bg-gray-100 rounded-t-xl">
                     <Image src={p.coverImage} alt={p.title} fill className="object-cover" />
                   </div>

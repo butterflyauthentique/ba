@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import ShareMenu from '@/components/ShareMenu';
-import { ClientPostService, fetchPostBySlugViaREST, fetchPublishedPostsViaREST } from '@/lib/services/postService';
+import { ClientPostService, fetchPostBySlugViaREST, fetchPublishedPostsViaREST, fetchPostByIdViaREST } from '@/lib/services/postService';
 
 type Props = { slug: string };
 
@@ -17,8 +17,14 @@ export default function BlogPostClient({ slug }: Props) {
     (async () => {
       try {
         setLoading(true);
-        // Try REST by slug
-        let p = await fetchPostBySlugViaREST(slug);
+        // Prefer id if provided in URL
+        const params = new URLSearchParams(window.location.search);
+        const idParam = params.get('id');
+        let p = idParam ? (await fetchPostByIdViaREST(idParam)) : null;
+        if (!p) {
+          // Try REST by slug
+          p = await fetchPostBySlugViaREST(slug);
+        }
         // If slug query is blocked by rules, list published via REST and filter client-side
         if (!p) {
           const list = await fetchPublishedPostsViaREST(50);
