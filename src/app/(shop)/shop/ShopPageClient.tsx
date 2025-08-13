@@ -366,7 +366,7 @@ export default function ShopPageClient({
 
                     {/* Share Button (card) */}
                     <div className="absolute top-3 left-3">
-                      <ShareMenu url={`/product/${product.slug || product.id}`} title={product.name} description={product.description} />
+                      <ShareMenu url={`/product/${product.slug || product.id}`} title={product.name} description={product.metaDescription || ''} />
                     </div>
                     
                     {/* Quick Add to Cart (desktop hover) */}

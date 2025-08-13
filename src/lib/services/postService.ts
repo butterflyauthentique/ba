@@ -70,6 +70,45 @@ export class ClientPostService {
       return viaRest as any;
     }
   }
+
+  static async getPublishedPosts(limitCount = 50) {
+    const now = Timestamp.now();
+    const results: Post[] = [] as any;
+    try {
+      // Published
+      const pubQ = query(
+        collection(db, POSTS),
+        where('status', '==', 'published'),
+        orderBy('publishedAt', 'desc'),
+        limit(limitCount)
+      );
+      const pubSnap = await getDocs(pubQ);
+      results.push(...pubSnap.docs.map(d => ({ id: d.id, ...(d.data() as Post) })) as any);
+    } catch {
+      const qBasic = query(collection(db, POSTS), where('status', '==', 'published'));
+      const snap = await getDocs(qBasic);
+      results.push(...snap.docs.map(d => ({ id: d.id, ...(d.data() as Post) })) as any);
+    }
+    try {
+      // Scheduled that reached time
+      const schQ = query(
+        collection(db, POSTS),
+        where('status', '==', 'scheduled'),
+        where('scheduledAt', '<=', now),
+        orderBy('scheduledAt', 'desc'),
+        limit(limitCount)
+      );
+      const schSnap = await getDocs(schQ);
+      results.push(...schSnap.docs.map(d => ({ id: d.id, ...(d.data() as Post) })) as any);
+    } catch {}
+    return results
+      .sort((a, b) => {
+        const aT = (a.publishedAt || a.scheduledAt || a.updatedAt || now).toMillis();
+        const bT = (b.publishedAt || b.scheduledAt || b.updatedAt || now).toMillis();
+        return bT - aT;
+      })
+      .slice(0, limitCount);
+  }
 }
 
 export class ServerPostService {
@@ -181,6 +220,94 @@ export async function fetchPostBySlugViaREST(slug: string): Promise<Post | null>
     return post;
   } catch {
     return null;
+  }
+}
+
+export async function fetchPublishedPostsViaREST(limitCount = 50): Promise<Post[]> {
+  try {
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+    const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+    if (!projectId) return [];
+    const base = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents:runQuery${apiKey ? `?key=${apiKey}` : ''}`;
+    const run = async (body: any) => {
+      const res = await fetch(base, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        cache: 'no-store',
+      });
+      if (!res.ok) return [] as any[];
+      const data = await res.json();
+      return (Array.isArray(data) ? data : []).map((d: any) => d.document).filter(Boolean);
+    };
+    const nowIso = new Date().toISOString();
+    const publishedDocs = await run({
+      structuredQuery: {
+        from: [{ collectionId: 'posts' }],
+        where: {
+          fieldFilter: {
+            field: { fieldPath: 'status' },
+            op: 'EQUAL',
+            value: { stringValue: 'published' },
+          },
+        },
+        orderBy: [{ field: { fieldPath: 'publishedAt' }, direction: 'DESCENDING' }],
+        limit: limitCount,
+      },
+    });
+    const scheduledDocs = await run({
+      structuredQuery: {
+        from: [{ collectionId: 'posts' }],
+        where: {
+          compositeFilter: {
+            op: 'AND',
+            filters: [
+              { fieldFilter: { field: { fieldPath: 'status' }, op: 'EQUAL', value: { stringValue: 'scheduled' } } },
+              { fieldFilter: { field: { fieldPath: 'scheduledAt' }, op: 'LESS_THAN_OR_EQUAL', value: { timestampValue: nowIso } } },
+            ],
+          },
+        },
+        orderBy: [{ field: { fieldPath: 'scheduledAt' }, direction: 'DESCENDING' }],
+        limit: limitCount,
+      },
+    });
+
+    const toPost = (doc: any): Post => {
+      const f = doc.fields || {};
+      const get = (k: string) => f[k];
+      const str = (v: any) => v?.stringValue ?? '';
+      const ts = (v: any) => (v?.timestampValue ? (Timestamp.fromDate(new Date(v.timestampValue)) as any) : undefined);
+      return {
+        id: doc.name?.split('/').pop(),
+        title: str(get('title')),
+        slug: str(get('slug')),
+        excerpt: str(get('excerpt')),
+        coverImage: str(get('coverImage')),
+        contentHtml: str(get('contentHtml')),
+        tags: (get('tags')?.arrayValue?.values || []).map((x: any) => x.stringValue) || [],
+        category: str(get('category')) || undefined,
+        readingTime: Number(get('readingTime')?.integerValue || get('readingTime')?.doubleValue || 0) || undefined,
+        authorName: str(get('authorName')),
+        authorPhotoUrl: str(get('authorPhotoUrl')) || undefined,
+        status: str(get('status')) as PostStatus,
+        publishedAt: ts(get('publishedAt')),
+        scheduledAt: ts(get('scheduledAt')),
+        createdAt: ts(get('createdAt')),
+        updatedAt: ts(get('updatedAt')),
+      };
+    };
+
+    const posts = [...publishedDocs, ...scheduledDocs].map(toPost);
+    const now = Timestamp.now();
+    return posts
+      .sort((a, b) => {
+        const aT = (a.publishedAt || a.scheduledAt || a.updatedAt || now).toMillis();
+        const bT = (b.publishedAt || b.scheduledAt || b.updatedAt || now).toMillis();
+        return bT - aT;
+      })
+      .slice(0, limitCount);
+  } catch {
+    return [];
   }
 }
 

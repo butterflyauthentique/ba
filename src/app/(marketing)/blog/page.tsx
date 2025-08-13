@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import ShareMenu from '@/components/ShareMenu';
-import { ClientPostService } from '@/lib/services/postService';
+import { ClientPostService, fetchPublishedPostsViaREST } from '@/lib/services/postService';
 import { useEffect, useState } from 'react';
 
 export default function BlogIndexPage() {
@@ -15,10 +15,12 @@ export default function BlogIndexPage() {
     (async () => {
       try {
         setLoading(true);
-        const all = await ClientPostService.listAll(50);
-        const now = new Date();
-        const published = all.filter((p: any) => p.status === 'published' || (p.status === 'scheduled' && p.scheduledAt?.toDate?.() && p.scheduledAt.toDate() <= now));
-        setPosts(published);
+        let published = await ClientPostService.getPublishedPosts(50);
+        if (!published || (Array.isArray(published) && published.length === 0)) {
+          // Fallback if client SDK blocked in incognito/non-auth
+          published = (await fetchPublishedPostsViaREST(50)) as any;
+        }
+        setPosts(published as any);
       } catch (e: any) {
         setError('Failed to load posts');
       } finally {
