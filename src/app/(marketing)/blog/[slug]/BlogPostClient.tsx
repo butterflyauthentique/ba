@@ -102,7 +102,7 @@ export default function BlogPostClient({ slug }: Props) {
               </div>
             </div>
           </div>
-          <ShareMenu url={`/blog/${post.slug}`} title={post.title} description={post.excerpt} />
+          <ShareMenu url={`/blog/${post.slug}?id=${post.id || ''}`} title={post.title} description={post.excerpt} />
         </div>
 
         {/* Content Layout: Small inline cover with wrapped text (classic blog feel) */}

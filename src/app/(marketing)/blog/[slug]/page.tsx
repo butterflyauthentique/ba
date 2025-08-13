@@ -1,14 +1,24 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import BlogPostClient from './BlogPostClient';
-import { fetchPostBySlugViaREST } from '@/lib/services/postService';
+import { fetchPostBySlugViaREST, fetchPostByIdViaREST, fetchPublishedPostsViaREST } from '@/lib/services/postService';
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = { params: Promise<{ slug: string }>, searchParams?: Promise<Record<string, unknown>> };
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: { params: Promise<{ slug: string }>, searchParams?: Promise<Record<string, unknown>> }): Promise<Metadata> {
   try {
     const { slug } = await params;
-    const post = await fetchPostBySlugViaREST(slug);
+    const spRaw = (await (searchParams ?? Promise.resolve({}))) as Record<string, unknown>;
+    const spId: unknown = spRaw?.['id'];
+    const id = typeof spId === 'string' ? spId : Array.isArray(spId) ? spId[0] : undefined;
+    let post = id ? await fetchPostByIdViaREST(id) : null;
+    if (!post) {
+      post = await fetchPostBySlugViaREST(slug);
+    }
+    if (!post) {
+      const list = await fetchPublishedPostsViaREST(50);
+      post = list.find(p => p.slug === slug) || null;
+    }
     if (!post) {
       return {
         title: 'Journal | Butterfly Authentique',
