@@ -17,14 +17,18 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     const title = `${post.title} | Butterfly Authentique`;
     const description = (post.excerpt || '').slice(0, 170);
     const ogImage = post.coverImage ? [{ url: post.coverImage }] : undefined;
+    const url = `https://butterflyauthentique.in/blog/${slug}`;
     return {
       title,
       description,
+      alternates: { canonical: url },
+      metadataBase: new URL('https://butterflyauthentique.in'),
       openGraph: {
         type: 'article',
         siteName: 'Butterfly Authentique',
         title: post.title,
         description,
+        url,
         images: ogImage,
       },
       twitter: {
@@ -38,6 +42,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     return { title: 'Journal | Butterfly Authentique' };
   }
 }
+
+export const dynamic = 'force-dynamic';
 
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;

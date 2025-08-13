@@ -62,7 +62,7 @@ export default function BlogIndexPage() {
                   <ShareButton url={`/blog/${p.slug}`} title={p.title} text={p.excerpt} />
                 </div>
                 <Link href={`/blog/${p.slug}`} className="block">
-                  <div className="relative aspect-[3/4] bg-gray-100">
+                  <div className="relative aspect-[3/4] bg-gray-100 rounded-t-xl">
                     <Image src={p.coverImage} alt={p.title} fill className="object-cover" />
                   </div>
                   <div className="p-3">
