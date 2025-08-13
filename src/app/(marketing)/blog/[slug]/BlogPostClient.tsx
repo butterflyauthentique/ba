@@ -62,30 +62,57 @@ export default function BlogPostClient({ slug }: Props) {
 
   return (
     <article className="min-h-screen bg-white">
-      <header className="bg-gray-50 border-b">
-        <div className="container py-10">
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-gray-500">{new Date(post.publishedAt?.toDate?.() || Date.now()).toLocaleDateString('en-IN')}</p>
-            <ShareButton url={`/blog/${post.slug}`} title={post.title} text={post.excerpt} />
-          </div>
-          <h1 className="mt-2 text-3xl sm:text-4xl font-bold text-gray-900">{post.title}</h1>
-          <p className="mt-2 text-gray-600 max-w-3xl">{post.excerpt}</p>
-          <div className="mt-6 flex items-center gap-3">
-            <div className="relative w-10 h-10 rounded-full overflow-hidden ring-2 ring-red-100">
-              <Image src={post.authorPhotoUrl || '/logo.png'} alt={post.authorName || 'Author'} fill className="object-cover bg-white" />
-            </div>
-            <div className="text-sm text-gray-700">
-              <div className="font-medium">{post.authorName || 'Butterfly Authentique Editorial'}</div>
-              <div className="text-gray-500">Butterfly Authentique</div>
-            </div>
-          </div>
-        </div>
-      </header>
       <div className="container py-10">
-        <div className="prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: post.contentHtml }} />
-        <div className="mt-10 pt-6 border-t flex items-center justify-between">
-          <Link href="/shop?category=all" className="text-red-600 font-medium">Shop the Collection</Link>
-          <Link href="/blog" className="text-gray-600 hover:text-gray-900">All posts</Link>
+        {/* Title + Meta */}
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs text-gray-500">{new Date(post.publishedAt?.toDate?.() || Date.now()).toLocaleDateString('en-IN')}</p>
+            <h1 className="mt-2 text-3xl sm:text-4xl font-bold text-gray-900 leading-tight">{post.title}</h1>
+            {(post.category || post.tags?.length) && (
+              <div className="mt-2 flex items-center gap-2 text-xs text-gray-600">
+                {post.category && <span className="px-2 py-0.5 rounded bg-gray-100 text-gray-700">{post.category}</span>}
+                {post.tags?.slice(0,3).map((t: string) => (
+                  <span key={t} className="px-2 py-0.5 rounded bg-gray-100 text-gray-600">#{t}</span>
+                ))}
+                {post.readingTime ? <span className="ml-2">• {post.readingTime} min read</span> : null}
+              </div>
+            )}
+            <p className="mt-3 text-gray-600 max-w-3xl">{post.excerpt}</p>
+            <div className="mt-5 flex items-center gap-3">
+              <div className="relative w-10 h-10 rounded-full overflow-hidden ring-2 ring-red-100">
+                <Image src={post.authorPhotoUrl || '/logo.png'} alt={post.authorName || 'Author'} fill className="object-cover bg-white" />
+              </div>
+              <div className="text-sm text-gray-700">
+                <div className="font-medium">{post.authorName || 'Butterfly Authentique Editorial'}</div>
+                <div className="text-gray-500">Butterfly Authentique</div>
+              </div>
+            </div>
+          </div>
+          <ShareButton url={`/blog/${post.slug}`} title={post.title} text={post.excerpt} />
+        </div>
+
+        {/* Content Layout: Small inline cover with wrapped text (classic blog feel) */}
+        <div className="mt-8">
+          <div className="prose prose-lg max-w-none">
+            <figure className="float-left mr-6 mb-4 w-44 sm:w-56 lg:w-72">
+              <div className="relative w-full aspect-[9/16] rounded-lg overflow-hidden border bg-white">
+                <Image
+                  src={post.coverImage}
+                  alt={post.title}
+                  fill
+                  className="object-contain bg-white"
+                  sizes="(max-width: 640px) 40vw, (max-width: 1024px) 30vw, 20vw"
+                />
+              </div>
+              <figcaption className="mt-2 text-xs text-gray-500">{post.title}</figcaption>
+            </figure>
+            <div dangerouslySetInnerHTML={{ __html: post.contentHtml }} />
+          </div>
+          <div className="clear-both" />
+          <div className="mt-10 pt-6 border-t flex items-center justify-between">
+            <Link href="/shop?category=all" className="text-red-600 font-medium">Shop the Collection</Link>
+            <Link href="/blog" className="text-gray-600 hover:text-gray-900">All posts</Link>
+          </div>
         </div>
       </div>
     </article>

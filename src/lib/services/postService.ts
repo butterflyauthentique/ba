@@ -11,6 +11,8 @@ export type Post = {
   coverImage: string;
   contentHtml: string;
   tags: string[];
+  category?: string;
+  readingTime?: number; // minutes
   authorName: string;
   authorPhotoUrl?: string;
   status: PostStatus;

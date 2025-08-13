@@ -15,7 +15,9 @@ export default function NewPostPage() {
     coverImage: '/social-preview.jpg',
     contentHtml: '',
     tags: [],
+    category: '',
     authorName: 'Butterfly Authentique Editorial',
+    readingTime: 3,
     status: 'draft',
     scheduledAt: null,
   });
@@ -69,6 +71,14 @@ export default function NewPostPage() {
               Upload
             </label>
           </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Category</label>
+          <input className="input w-full" value={form.category || ''} onChange={(e) => update('category', e.target.value)} />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Tags (comma separated)</label>
+          <input className="input w-full" value={(form.tags || []).join(', ')} onChange={(e) => update('tags', e.target.value.split(',').map(s => s.trim()).filter(Boolean))} />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Author Name</label>

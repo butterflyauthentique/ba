@@ -51,6 +51,16 @@ export default function EditPostPage() {
           <label className="block text-sm font-medium mb-1">Excerpt</label>
           <textarea className="input w-full" rows={3} value={post.excerpt} onChange={(e) => update('excerpt', e.target.value)} />
         </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Category</label>
+            <input className="input w-full" value={post.category || ''} onChange={(e) => update('category', e.target.value)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Tags (comma separated)</label>
+            <input className="input w-full" value={(post.tags || []).join(', ')} onChange={(e) => update('tags', e.target.value.split(',').map(s => s.trim()).filter(Boolean))} />
+          </div>
+        </div>
         <div>
           <label className="block text-sm font-medium mb-1">Cover Image URL</label>
           <div className="flex items-center gap-3">

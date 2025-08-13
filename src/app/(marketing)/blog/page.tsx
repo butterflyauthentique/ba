@@ -54,25 +54,33 @@ export default function BlogIndexPage() {
           <p className="text-gray-600">{error}</p>
         )}
         {!loading && !error && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
             {posts.map((p: any) => (
-              <article key={p.slug} className="group rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow max-w-md bg-white">
-                <div className="p-4 flex items-center justify-between">
+              <article key={p.slug} className="group rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-all bg-white">
+                <div className="p-3 flex items-center justify-between">
                   <div className="text-xs text-gray-500">{new Date(p.publishedAt?.toDate?.() || p.updatedAt?.toDate?.() || Date.now()).toLocaleDateString('en-IN')}</div>
                   <ShareButton url={`/blog/${p.slug}`} title={p.title} text={p.excerpt} />
                 </div>
                 <Link href={`/blog/${p.slug}`} className="block">
-                  <div className="relative aspect-[9/16] bg-gray-100">
-                    <Image src={p.coverImage} alt={p.title} fill className="object-contain" />
+                  <div className="relative aspect-[3/4] bg-gray-100">
+                    <Image src={p.coverImage} alt={p.title} fill className="object-cover" />
                   </div>
-                  <div className="p-4">
-                    <h2 className="mt-1 font-semibold text-gray-900 group-hover:text-red-600">{p.title}</h2>
-                    <p className="mt-2 text-sm text-gray-600 line-clamp-2">{p.excerpt}</p>
+                  <div className="p-3">
+                    <h2 className="mt-1 font-semibold text-sm sm:text-base text-gray-900 group-hover:text-red-600 line-clamp-2">{p.title}</h2>
+                    {(p.category || p.tags?.length) && (
+                      <div className="mt-1 flex items-center gap-1 text-[10px] sm:text-xs text-gray-600">
+                        {p.category && <span className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-700">{p.category}</span>}
+                        {p.tags?.slice(0,2).map((t: string) => (
+                          <span key={t} className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">#{t}</span>
+                        ))}
+                      </div>
+                    )}
+                    <p className="mt-2 text-xs sm:text-sm text-gray-600 line-clamp-2">{p.excerpt}</p>
                     <div className="mt-3 flex items-center gap-2">
-                      <div className="relative w-8 h-8 rounded-full overflow-hidden ring-1 ring-gray-200">
+                      <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden ring-1 ring-gray-200">
                         <Image src={p.authorPhotoUrl || '/logo.png'} alt={p.authorName || 'Author'} fill className="object-cover" />
                       </div>
-                      <div className="text-xs text-gray-700">{p.authorName || 'Butterfly Authentique Editorial'}</div>
+                      <div className="text-[11px] sm:text-xs text-gray-700">{p.authorName || 'Butterfly Authentique Editorial'}</div>
                     </div>
                   </div>
                 </Link>
