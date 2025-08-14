@@ -61,7 +61,7 @@ export default function CartPage() {
     return total + (product?.price || 0) * item.totalQuantity;
   }, 0);
 
-  const shipping = subtotal > 0 ? (subtotal >= 5000 ? 0 : 200) : 0;
+  const shipping = subtotal > 0 ? (subtotal >= 900 ? 0 : 200) : 0;
   const tax = 0; // No additional GST charged to customer
   const total = subtotal + shipping; // Total is subtotal + shipping (GST already included in prices)
 
@@ -293,10 +293,10 @@ export default function CartPage() {
               </div>
 
               {/* Shipping Info */}
-              {subtotal > 0 && subtotal < 5000 && (
+              {subtotal > 0 && subtotal < 900 && (
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
                   <p className="text-sm text-amber-800">
-                    Add ₹{(5000 - subtotal).toLocaleString()} more to get free shipping!
+                    Add ₹{(900 - subtotal).toLocaleString()} more to get free shipping!
                   </p>
                 </div>
               )}

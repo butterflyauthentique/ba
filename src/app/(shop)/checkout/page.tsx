@@ -95,13 +95,13 @@ export default function CheckoutPage() {
       return sum + (price * item.quantity);
     }, 0);
     
-    // Free shipping for orders above ₹1000
-    if (subtotal >= 1000) {
+    // Free shipping for orders above ₹900
+    if (subtotal >= 900) {
       return 0;
     }
     
-    // Standard shipping cost for orders below ₹1000
-    return 100;
+    // Standard shipping cost for orders below ₹900
+    return 200;
   };
 
   // Calculate order totals
@@ -599,12 +599,12 @@ export default function CheckoutPage() {
                   </div>
                   {orderTotals.shipping === 0 && (
                     <div className="text-xs text-green-600 text-center bg-green-50 p-2 rounded">
-                      🎉 Free shipping on orders above ₹1000
+                      🎉 Free shipping on orders above ₹900
                     </div>
                   )}
-                  {orderTotals.shipping > 0 && orderTotals.subtotal < 1000 && (
+                  {orderTotals.shipping > 0 && orderTotals.subtotal < 900 && (
                     <div className="text-xs text-blue-600 text-center bg-blue-50 p-2 rounded">
-                      💡 Add ₹{1000 - orderTotals.subtotal} more for free shipping
+                      💡 Add ₹{900 - orderTotals.subtotal} more for free shipping
                     </div>
                   )}
                   <div className="border-t border-gray-200 pt-4">
