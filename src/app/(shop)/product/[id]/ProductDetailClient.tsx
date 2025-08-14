@@ -11,7 +11,6 @@ import {
   Star, 
   Truck, 
   Shield, 
-  RotateCcw,
   ChevronLeft,
   ChevronRight,
   Plus,
@@ -675,7 +674,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   <Truck className="w-5 h-5 text-red-600" />
                   <div>
                     <div className="font-medium text-gray-900">Free Shipping</div>
-                    <div className="text-sm text-gray-600">On orders over ₹2000</div>
+                    <div className="text-sm text-gray-600">On orders over ₹900</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -683,13 +682,6 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   <div>
                     <div className="font-medium text-gray-900">Secure Payment</div>
                     <div className="text-sm text-gray-600">100% secure checkout</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <RotateCcw className="w-5 h-5 text-red-600" />
-                  <div>
-                    <div className="font-medium text-gray-900">Easy Returns</div>
-                    <div className="text-sm text-gray-600">30 day return policy</div>
                   </div>
                 </div>
               </div>
