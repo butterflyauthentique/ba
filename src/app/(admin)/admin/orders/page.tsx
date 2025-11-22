@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Search, Filter, Download, Eye, Package, Truck, CheckCircle, XCircle } from 'lucide-react';
+import Link from 'next/link';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import toast from 'react-hot-toast';
 import { collection, query, orderBy, getDocs, doc, updateDoc } from 'firebase/firestore';
@@ -26,7 +27,7 @@ export default function AdminOrdersPage() {
       const ordersRef = collection(db, 'orders');
       const q = query(ordersRef, orderBy('createdAt', 'desc'));
       const querySnapshot = await getDocs(q);
-      
+
       const ordersData: Order[] = [];
       querySnapshot.forEach((doc) => {
         const data = doc.data() as Order;
@@ -35,7 +36,7 @@ export default function AdminOrdersPage() {
           id: doc.id
         });
       });
-      
+
       setOrders(ordersData);
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -52,8 +53,8 @@ export default function AdminOrdersPage() {
         status: newStatus,
         updatedAt: new Date()
       });
-      
-      setOrders(orders.map(order => 
+
+      setOrders(orders.map(order =>
         order.id === orderId ? { ...order, status: newStatus } : order
       ));
       toast.success('Order status updated successfully');
@@ -71,18 +72,18 @@ export default function AdminOrdersPage() {
     const orderNumber = (order.orderNumber || '').toLowerCase();
     const customerEmail = (order.customer?.email || '').toLowerCase();
     const matchesSearch = customerName.includes(searchTerm.toLowerCase()) ||
-                         orderNumber.includes(searchTerm.toLowerCase()) ||
-                         customerEmail.includes(searchTerm.toLowerCase());
+      orderNumber.includes(searchTerm.toLowerCase()) ||
+      customerEmail.includes(searchTerm.toLowerCase());
     const matchesStatus = selectedStatus === 'all' || (order.status || '') === selectedStatus;
     const matchesPaymentStatus = selectedPaymentStatus === 'all' || (order.paymentStatus || '') === selectedPaymentStatus;
-    
+
     return matchesSearch && matchesStatus && matchesPaymentStatus;
   });
 
   const sortedOrders = [...filteredOrders].sort((a, b) => {
     const aValue = a[sortBy as keyof Order];
     const bValue = b[sortBy as keyof Order];
-    
+
     if (typeof aValue === 'string' && typeof bValue === 'string') {
       return aValue.localeCompare(bValue);
     }
@@ -127,7 +128,7 @@ export default function AdminOrdersPage() {
   return (
     <div className="flex h-screen bg-gray-50">
       <AdminSidebar />
-      
+
       <div className="flex-1 lg:ml-64">
         <div className="p-6">
           {/* Header */}
@@ -209,8 +210,8 @@ export default function AdminOrdersPage() {
                 <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>
                 <p className="text-gray-600">
-                  {searchTerm || selectedStatus !== 'all' || selectedPaymentStatus !== 'all' 
-                    ? 'Try adjusting your filters' 
+                  {searchTerm || selectedStatus !== 'all' || selectedPaymentStatus !== 'all'
+                    ? 'Try adjusting your filters'
                     : 'Orders will appear here when customers place them'}
                 </p>
               </div>
@@ -295,9 +296,9 @@ export default function AdminOrdersPage() {
                           {new Date(order.createdAt.seconds * 1000).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <button className="text-red-600 hover:text-red-900 mr-3">
+                          <Link href={`/admin/orders/${order.id}`} className="text-red-600 hover:text-red-900 mr-3">
                             <Eye className="h-4 w-4" />
-                          </button>
+                          </Link>
                         </td>
                       </tr>
                     ))}

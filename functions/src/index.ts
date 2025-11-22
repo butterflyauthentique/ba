@@ -3,6 +3,8 @@ import * as admin from 'firebase-admin';
 import * as cors from 'cors';
 const Razorpay = require('razorpay');
 
+import { createShiprocketOrder } from './shiprocket';
+
 // Initialize Firebase Admin
 admin.initializeApp();
 
@@ -103,7 +105,7 @@ export const getProducts = functions.https.onRequest((req, res) => {
         id: doc.id,
         ...doc.data()
       }));
-      
+
       return res.json({ success: true, products });
     } catch (error) {
       console.error('Error getting products:', error);
@@ -118,16 +120,16 @@ export const getProduct = functions.https.onRequest((req, res) => {
     try {
       const { id } = req.params;
       const productDoc = await db.collection('products').doc(id).get();
-      
+
       if (!productDoc.exists) {
         return res.status(404).json({ success: false, error: 'Product not found' });
       }
-      
+
       const product = {
         id: productDoc.id,
         ...productDoc.data()
       };
-      
+
       return res.json({ success: true, product });
     } catch (error) {
       console.error('Error getting product:', error);
@@ -141,7 +143,7 @@ export const saveProduct = functions.https.onRequest((req, res) => {
   return corsHandler(req, res, async () => {
     try {
       const { id, productData } = req.body;
-      
+
       if (id) {
         // Update existing product
         await db.collection('products').doc(id).update({
@@ -157,7 +159,7 @@ export const saveProduct = functions.https.onRequest((req, res) => {
         });
         return res.json({ success: true, id: docRef.id });
       }
-      
+
       return res.json({ success: true, id });
     } catch (error) {
       console.error('Error saving product:', error);
@@ -171,11 +173,11 @@ export const deleteProduct = functions.https.onRequest((req, res) => {
   return corsHandler(req, res, async () => {
     try {
       const { id } = req.body;
-      
+
       if (!id) {
         return res.status(400).json({ success: false, error: 'Product ID is required' });
       }
-      
+
       await db.collection('products').doc(id).delete();
       return res.json({ success: true });
     } catch (error) {
@@ -194,7 +196,7 @@ export const getOrders = functions.https.onRequest((req, res) => {
         id: doc.id,
         ...doc.data()
       }));
-      
+
       return res.json({ success: true, orders });
     } catch (error) {
       console.error('Error getting orders:', error);
@@ -210,11 +212,11 @@ export const getAdminStats = functions.https.onRequest((req, res) => {
       // Get total products
       const productsSnapshot = await db.collection('products').get();
       const totalProducts = productsSnapshot.size;
-      
+
       // Get total orders
       const ordersSnapshot = await db.collection('orders').get();
       const totalOrders = ordersSnapshot.size;
-      
+
       // Calculate total revenue
       let totalRevenue = 0;
       ordersSnapshot.docs.forEach(doc => {
@@ -223,7 +225,7 @@ export const getAdminStats = functions.https.onRequest((req, res) => {
           totalRevenue += order.total;
         }
       });
-      
+
       // Get total customers (unique users who have placed orders)
       const uniqueCustomers = new Set();
       ordersSnapshot.docs.forEach(doc => {
@@ -232,14 +234,14 @@ export const getAdminStats = functions.https.onRequest((req, res) => {
           uniqueCustomers.add(order.userId);
         }
       });
-      
+
       const stats = {
         totalProducts,
         totalOrders,
         totalCustomers: uniqueCustomers.size,
         totalRevenue
       };
-      
+
       return res.json({ success: true, stats });
     } catch (error) {
       console.error('Error getting admin stats:', error);
@@ -253,11 +255,11 @@ export const checkAdmin = functions.https.onRequest((req, res) => {
   return corsHandler(req, res, async () => {
     try {
       const { uid } = req.body;
-      
+
       if (!uid) {
         return res.status(400).json({ success: false, error: 'User ID required' });
       }
-      
+
       const isUserAdmin = await isAdmin(uid);
       return res.json({ success: true, isAdmin: isUserAdmin });
     } catch (error) {
@@ -276,7 +278,7 @@ export const getAdmins = functions.https.onRequest((req, res) => {
         email: doc.id,
         ...doc.data()
       }));
-      
+
       // Add the default admin
       admins.unshift({
         email: 'butterfly.auth@gmail.com',
@@ -285,7 +287,7 @@ export const getAdmins = functions.https.onRequest((req, res) => {
         isDefault: true,
         createdAt: new Date()
       } as any);
-      
+
       return res.json({ success: true, admins });
     } catch (error) {
       console.error('Error getting admins:', error);
@@ -299,38 +301,38 @@ export const addAdmin = functions.https.onRequest((req, res) => {
   return corsHandler(req, res, async () => {
     try {
       const { email, name, currentUserEmail } = req.body;
-      
+
       // Check if current user is default admin
       if (currentUserEmail !== 'butterfly.auth@gmail.com') {
-        return res.status(403).json({ 
-          success: false, 
-          error: 'Only the default admin can add new admins' 
+        return res.status(403).json({
+          success: false,
+          error: 'Only the default admin can add new admins'
         });
       }
-      
+
       if (!email || !name) {
-        return res.status(400).json({ 
-          success: false, 
-          error: 'Email and name are required' 
+        return res.status(400).json({
+          success: false,
+          error: 'Email and name are required'
         });
       }
-      
+
       if (email === 'butterfly.auth@gmail.com') {
-        return res.status(400).json({ 
-          success: false, 
-          error: 'Cannot add the default admin' 
+        return res.status(400).json({
+          success: false,
+          error: 'Cannot add the default admin'
         });
       }
-      
+
       // Check if admin already exists
       const existingAdmin = await db.collection('admins').doc(email).get();
       if (existingAdmin.exists) {
-        return res.status(400).json({ 
-          success: false, 
-          error: 'Admin already exists' 
+        return res.status(400).json({
+          success: false,
+          error: 'Admin already exists'
         });
       }
-      
+
       // Add new admin
       await db.collection('admins').doc(email).set({
         email,
@@ -339,7 +341,7 @@ export const addAdmin = functions.https.onRequest((req, res) => {
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       });
-      
+
       return res.json({ success: true, message: 'Admin added successfully' });
     } catch (error) {
       console.error('Error adding admin:', error);
@@ -353,53 +355,53 @@ export const removeAdmin = functions.https.onRequest((req, res) => {
   return corsHandler(req, res, async () => {
     try {
       const { email, currentUserEmail } = req.body;
-      
+
       // Check if current user is default admin
       if (currentUserEmail !== 'butterfly.auth@gmail.com') {
-        return res.status(403).json({ 
-          success: false, 
-          error: 'Only the default admin can remove admins' 
+        return res.status(403).json({
+          success: false,
+          error: 'Only the default admin can remove admins'
         });
       }
-      
+
       if (!email) {
-        return res.status(400).json({ 
-          success: false, 
-          error: 'Email is required' 
+        return res.status(400).json({
+          success: false,
+          error: 'Email is required'
         });
       }
-      
+
       if (email === 'butterfly.auth@gmail.com') {
-        return res.status(400).json({ 
-          success: false, 
-          error: 'Cannot remove the default admin' 
+        return res.status(400).json({
+          success: false,
+          error: 'Cannot remove the default admin'
         });
       }
-      
+
       // Remove admin
       await db.collection('admins').doc(email).delete();
-      
+
       return res.json({ success: true, message: 'Admin removed successfully' });
     } catch (error) {
       console.error('Error removing admin:', error);
       return res.status(500).json({ success: false, error: 'Failed to remove admin' });
     }
   });
-}); 
+});
 
 // Next.js server function for handling static files and routing
 export const nextjsServer = functions.https.onRequest((req, res) => {
   return corsHandler(req, res, async () => {
     try {
       const { path } = req;
-      
+
       // Handle static files
       if (path.startsWith('/_next/')) {
         // For static files, we need to serve them from the .next directory
         // This is a simplified approach - in production, you might want to use a CDN
         return res.status(200).send('Static file handling - implement CDN for production');
       }
-      
+
       // For all other routes, serve the main HTML file
       // This allows Next.js client-side routing to handle the rest
       return res.status(200).send('Next.js app - client-side routing will handle the rest');
@@ -408,7 +410,7 @@ export const nextjsServer = functions.https.onRequest((req, res) => {
       return res.status(500).json({ success: false, error: 'Server error' });
     }
   });
-}); 
+});
 
 // Initialize Razorpay client (dotenv-based with legacy fallback)
 const getRazorpay = () => {
@@ -474,9 +476,9 @@ export const createRazorpayOrder = functions.https.onRequest((req, res) => {
 export const verifyRazorpayPayment = functions.https.onRequest((req, res) => {
   return corsHandler(req, res, async () => {
     try {
-      const { 
-        razorpay_order_id, 
-        razorpay_payment_id, 
+      const {
+        razorpay_order_id,
+        razorpay_payment_id,
         razorpay_signature,
         orderData // This will contain cart items, customer info, etc.
       } = req.body;
@@ -531,6 +533,51 @@ export const verifyRazorpayPayment = functions.https.onRequest((req, res) => {
 
           console.log('✅ Order created in Firestore with ID:', orderRef.id);
 
+          // ------------------------------------------------------------------
+          // AUTOMATIC SHIPROCKET ORDER CREATION
+          // ------------------------------------------------------------------
+          let shiprocketData = null;
+          try {
+            console.log('🚀 Initiating automatic Shiprocket order creation...');
+
+            // Construct order object for Shiprocket (need to mimic the Order interface)
+            // We use new Date() for createdAt since serverTimestamp() is not readable yet
+            const fullOrderData = {
+              id: orderRef.id,
+              orderNumber: `BA-${Date.now()}`,
+              razorpayOrderId: razorpay_order_id,
+              razorpayPaymentId: razorpay_payment_id,
+              status: 'pending',
+              paymentStatus: 'paid',
+              paymentMethod: 'razorpay',
+              customerId: customerId || null,
+              ...orderData,
+              createdAt: { toDate: () => new Date() }, // Mock Timestamp for Shiprocket helper
+            };
+
+            const srResponse = await createShiprocketOrder(fullOrderData);
+
+            if (srResponse && srResponse.order_id) {
+              shiprocketData = {
+                orderId: srResponse.order_id,
+                shipmentId: srResponse.shipment_id,
+                shipmentStatus: 'CREATED',
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+              };
+
+              // Update Firestore with Shiprocket details
+              await orderRef.update({
+                shiprocket: shiprocketData
+              });
+
+              console.log('✅ Shiprocket order synced automatically');
+            }
+          } catch (srError) {
+            console.error('⚠️ Failed to create Shiprocket order automatically:', srError);
+            // We don't fail the whole request, just log the error
+            // The admin can still manually create it from the dashboard
+          }
+
           return res.json({
             success: true,
             verified: true,
@@ -539,7 +586,8 @@ export const verifyRazorpayPayment = functions.https.onRequest((req, res) => {
             orderId: razorpay_order_id,
             firestoreOrderId: orderRef.id,
             orderNumber: `BA-${Date.now()}`,
-            customerId: customerId || null
+            customerId: customerId || null,
+            shiprocket: shiprocketData // Return Shiprocket status to client
           });
         } catch (error) {
           console.error('Error creating order in Firestore:', error);
@@ -575,14 +623,14 @@ export const razorpayWebhook = functions.https.onRequest((req, res) => {
       // Verify webhook signature for security
       const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET || functions.config().razorpay?.webhook_secret;
       const signature = req.headers['x-razorpay-signature'];
-      
+
       if (webhookSecret && signature) {
         const crypto = require('crypto');
         const expectedSignature = crypto
           .createHmac('sha256', webhookSecret)
           .update(JSON.stringify(req.body))
           .digest('hex');
-        
+
         if (signature !== expectedSignature) {
           console.error('Invalid webhook signature');
           return res.status(400).json({ error: 'Invalid signature' });
@@ -598,12 +646,12 @@ export const razorpayWebhook = functions.https.onRequest((req, res) => {
         case 'order.paid':
           await handlePaymentUpdate(payload);
           break;
-        
+
         case 'refund.created':
         case 'refund.processed':
           await handleRefundUpdate(payload);
           break;
-        
+
         default:
           console.log('Unhandled webhook event:', event);
       }
@@ -700,7 +748,7 @@ export const syncOrdersWithRazorpay = functions.https.onRequest((req, res) => {
       const token = authHeader.split('Bearer ')[1];
       const decodedToken = await admin.auth().verifyIdToken(token);
       const isAdminUser = await isAdmin(decodedToken.uid, decodedToken.email);
-      
+
       if (!isAdminUser) {
         return res.status(403).json({ error: 'Admin access required' });
       }
@@ -708,7 +756,7 @@ export const syncOrdersWithRazorpay = functions.https.onRequest((req, res) => {
       // Initialize Razorpay client
       const razorpayKeyId = functions.config().razorpay?.key_id;
       const razorpayKeySecret = functions.config().razorpay?.key_secret;
-      
+
       if (!razorpayKeyId || !razorpayKeySecret) {
         return res.status(500).json({ error: 'Razorpay credentials not configured' });
       }
@@ -770,14 +818,14 @@ const syncSingleOrder = async (razorpay: any, orderId: string) => {
 
     const orderData = orderDoc.data();
     const razorpayOrderId = orderData?.razorpayOrderId;
-    
+
     if (!razorpayOrderId) {
       return { success: false, error: 'No Razorpay order ID found' };
     }
 
     // Fetch payments for this order
     const payments = await razorpay.orders.fetchPayments(razorpayOrderId);
-    
+
     // Update order with latest Razorpay data
     const updateData: any = {
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -786,7 +834,7 @@ const syncSingleOrder = async (razorpay: any, orderId: string) => {
     if (payments.items && payments.items.length > 0) {
       const latestPayment = payments.items[0];
       updateData.razorpayPaymentId = latestPayment.id;
-      
+
       if (latestPayment.status === 'captured') {
         updateData.paymentStatus = 'paid';
         updateData.status = orderData.status === 'pending' ? 'confirmed' : orderData.status;
@@ -819,10 +867,10 @@ const syncOrdersInDateRange = async (razorpay: any, startDate: Date, endDate: Da
     // Process orders in batches to avoid rate limits
     const batchSize = 10;
     const orders = ordersQuery.docs;
-    
+
     for (let i = 0; i < orders.length; i += batchSize) {
       const batch = orders.slice(i, i + batchSize);
-      
+
       await Promise.all(batch.map(async (orderDoc) => {
         try {
           const result = await syncSingleOrder(razorpay, orderDoc.id);
@@ -933,3 +981,6 @@ const importOrdersInDateRange = async (razorpay: any, startDate: Date, endDate: 
     throw error;
   }
 };
+
+// Export Shipping webhook handler (renamed to avoid Shiprocket URL restrictions)
+export { shippingWebhook } from './shippingWebhook';
