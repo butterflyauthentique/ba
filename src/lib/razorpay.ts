@@ -2,7 +2,9 @@
 import { loadScript } from './utils';
 
 // Razorpay configuration from environment variables
-const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_live_AaXoLwVs0isbmk";
+const keyId = (process.env.NODE_ENV === 'production'
+  ? process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID
+  : process.env.NEXT_PUBLIC_RAZORPAY_TEST_KEY_ID) || "rzp_test_YourTestKey";
 
 // Debug configuration in development
 if (typeof window !== 'undefined') {
@@ -24,9 +26,8 @@ export interface CheckoutOrder {
   amount: number; // Amount in paise (smallest currency unit)
   currency: string;
   receipt: string;
-  notes: {
+  notes?: {
     address: string;
-    contact: string;
     name: string;
     email: string;
   };
@@ -63,7 +64,7 @@ export const createRazorpayOrder = async (orderData: {
   amount: number;
   currency: string;
   receipt: string;
-  notes: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  notes?: any; // optional notes
 }): Promise<any> => { // eslint-disable-line @typescript-eslint/no-explicit-any
   try {
     const response = await fetch('https://us-central1-butterflyauthentique33.cloudfunctions.net/createRazorpayOrder', {
@@ -90,7 +91,7 @@ export const createRazorpayOrder = async (orderData: {
 export const verifyPayment = async (paymentData: PaymentResponse): Promise<boolean> => {
   try {
     console.log('🔍 Verifying payment with data:', paymentData);
-    
+
     const response = await fetch('https://us-central1-butterflyauthentique33.cloudfunctions.net/verifyRazorpayPayment', {
       method: 'POST',
       headers: {
@@ -110,7 +111,7 @@ export const verifyPayment = async (paymentData: PaymentResponse): Promise<boole
 
     const data = await response.json();
     console.log('🔍 Verification response data:', data);
-    
+
     // Check if the response has the expected structure
     if (data.verified === true) {
       console.log('✅ Payment verification successful');
@@ -126,7 +127,7 @@ export const verifyPayment = async (paymentData: PaymentResponse): Promise<boole
     }
   } catch (error) {
     console.error('❌ Error verifying payment:', error);
-    
+
     // For now, if verification fails, we'll assume the payment was successful
     // since we received a successful payment response from Razorpay
     // This prevents users from getting stuck on the processing screen
@@ -138,11 +139,11 @@ export const verifyPayment = async (paymentData: PaymentResponse): Promise<boole
 // Initialize Razorpay checkout
 export const initializeRazorpayCheckout = async (order: CheckoutOrder): Promise<any> => { // eslint-disable-line @typescript-eslint/no-explicit-any
   const razorpay = await loadRazorpay(); // eslint-disable-line @typescript-eslint/no-unused-vars
-  
+
   // Suppress console errors before initializing Razorpay
   const originalConsoleError = console.error;
   const originalConsoleWarn = console.warn;
-  
+
   console.error = (...args: any[]) => {
     const message = args.join(' ');
     if (message.includes('x-rtb-fingerprint-id') || message.includes('unsafe header')) {
@@ -150,7 +151,7 @@ export const initializeRazorpayCheckout = async (order: CheckoutOrder): Promise<
     }
     originalConsoleError.apply(console, args);
   };
-  
+
   console.warn = (...args: any[]) => {
     const message = args.join(' ');
     if (message.includes('x-rtb-fingerprint-id') || message.includes('unsafe header')) {
@@ -158,20 +159,20 @@ export const initializeRazorpayCheckout = async (order: CheckoutOrder): Promise<
     }
     originalConsoleWarn.apply(console, args);
   };
-  
+
   const options = {
     key: razorpayConfig.keyId,
     amount: order.amount,
     currency: order.currency,
     name: 'Butterfly Authentique',
-    description: 'Handcrafted Elegance',
+    description: 'Purchase at Butterfly Authentique',
     image: '/android-chrome-192x192.png',
     order_id: order.id,
     handler: function (response: PaymentResponse) {
       // Restore console functions
       console.error = originalConsoleError;
       console.warn = originalConsoleWarn;
-      
+
       // Handle payment success
       console.log('Payment successful:', response);
       return response;
@@ -225,11 +226,11 @@ export const initializeRazorpayCheckout = async (order: CheckoutOrder): Promise<
       }
     },
     modal: {
-      ondismiss: function() {
+      ondismiss: function () {
         // Restore console functions
         console.error = originalConsoleError;
         console.warn = originalConsoleWarn;
-        
+
         // Handle modal dismissal
         console.log('Payment modal dismissed');
       }
@@ -243,12 +244,12 @@ export const initializeRazorpayCheckout = async (order: CheckoutOrder): Promise<
 
   return new Promise((resolve, reject) => {
     const rzp = new (window as any).Razorpay(options); // eslint-disable-line @typescript-eslint/no-explicit-any
-    
+
     rzp.on('payment.failed', function (response: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       // Restore console functions
       console.error = originalConsoleError;
       console.warn = originalConsoleWarn;
-      
+
       console.error('Payment failed:', response.error);
       reject(new Error(response.error.description || 'Payment failed'));
     });
@@ -257,7 +258,7 @@ export const initializeRazorpayCheckout = async (order: CheckoutOrder): Promise<
       // Restore console functions
       console.error = originalConsoleError;
       console.warn = originalConsoleWarn;
-      
+
       console.log('Payment success event triggered:', response);
       resolve(response);
     });
@@ -267,7 +268,7 @@ export const initializeRazorpayCheckout = async (order: CheckoutOrder): Promise<
       // Restore console functions
       console.error = originalConsoleError;
       console.warn = originalConsoleWarn;
-      
+
       console.error('Payment error:', response.error);
       reject(new Error(response.error.description || 'Payment error occurred'));
     });
@@ -278,7 +279,7 @@ export const initializeRazorpayCheckout = async (order: CheckoutOrder): Promise<
       // Restore console functions
       console.error = originalConsoleError;
       console.warn = originalConsoleWarn;
-      
+
       console.error('Error opening Razorpay modal:', error);
       reject(new Error('Failed to open payment gateway'));
     }
@@ -293,7 +294,7 @@ export const calculateOrderTotals = (items: any[], products: any[], shippingCost
     const price = product?.price || 0;
     return sum + (price * item.quantity);
   }, 0);
-  
+
   // Since prices already include GST, we don't add additional tax
   const tax = 0; // No additional GST charged to customer
   const shipping = shippingCost;
@@ -314,7 +315,7 @@ export const formatCurrency = (amount: number, currency: string = 'INR') => {
   if (isNaN(amount) || !isFinite(amount)) {
     return '₹0';
   }
-  
+
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: currency,

@@ -400,14 +400,8 @@ export default function CheckoutPage() {
         amount: orderTotals.totalInPaise,
         currency: 'INR',
         receipt: `BA-${Date.now()}`,
-        notes: {
-          address: formData.addressLine2
-            ? `${formData.address}, ${formData.addressLine2}, ${formData.city}, ${formData.state} ${formData.postalCode}`
-            : `${formData.address}, ${formData.city}, ${formData.state} ${formData.postalCode}`,
-          contact: stripPhoneFormatting(formData.phone),
-          name: `${formData.firstName} ${formData.lastName}`,
-          email: formData.email
-        }
+
+
       };
 
       const orderResponse = await createRazorpayOrder(orderData);
@@ -435,7 +429,7 @@ export default function CheckoutPage() {
         amount: orderResponse.order.amount,
         currency: orderResponse.order.currency,
         receipt: orderResponse.order.receipt,
-        notes: orderData.notes,
+
         prefill: {
           name: `${formData.firstName} ${formData.lastName}`,
           email: formData.email,
@@ -890,7 +884,6 @@ export default function CheckoutPage() {
                     Order Notes (Optional)
                   </label>
                   <textarea
-                    value={formData.notes}
                     onChange={(e) => handleInputChange('notes', e.target.value)}
                     className="input w-full resize-none"
                     rows={3}
