@@ -748,7 +748,7 @@ export default function CheckoutPage() {
                       onChange={(e) => handleInputChange('phone', e.target.value)}
                       className={`input w-full pl-10 ${fieldErrors.phone ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                       placeholder="Enter 10-digit phone number"
-                      maxLength={10}
+                      maxLength={11}
                     />
                   </div>
                   {fieldErrors.phone && (
