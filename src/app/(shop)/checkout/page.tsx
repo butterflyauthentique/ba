@@ -217,6 +217,7 @@ export default function CheckoutPage() {
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [isLoadingAddresses, setIsLoadingAddresses] = useState(false);
   const [saveAddressChecked, setSaveAddressChecked] = useState(false);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
 
   // Load saved addresses
   useEffect(() => {
@@ -252,6 +253,9 @@ export default function CheckoutPage() {
       country: address.country
     }));
 
+    // Set selected address ID for visual feedback
+    setSelectedAddressId(address.id);
+
     // Clear all errors
     setFieldErrors({});
 
@@ -260,6 +264,11 @@ export default function CheckoutPage() {
 
   // Handle form input changes
   const handleInputChange = (field: keyof CheckoutForm, value: string) => {
+    // Clear selected address when user manually edits
+    if (selectedAddressId) {
+      setSelectedAddressId(null);
+    }
+
     // Apply phone formatting for display
     if (field === 'phone') {
       const formatted = formatPhoneDisplay(value);
@@ -622,8 +631,16 @@ export default function CheckoutPage() {
                     <div
                       key={addr.id}
                       onClick={() => handleAddressSelect(addr)}
-                      className="border border-gray-200 rounded-lg p-4 cursor-pointer hover:border-red-500 hover:bg-red-50 transition-colors relative group"
+                      className={`border rounded-lg p-4 cursor-pointer transition-all relative group ${selectedAddressId === addr.id
+                        ? 'border-red-500 bg-red-50 ring-2 ring-red-200'
+                        : 'border-gray-200 hover:border-red-500 hover:bg-red-50'
+                        }`}
                     >
+                      {selectedAddressId === addr.id && (
+                        <div className="absolute top-3 right-3 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                          <CheckCircle className="w-4 h-4 text-white" />
+                        </div>
+                      )}
                       <div className="flex justify-between items-start mb-2">
                         <span className="font-medium text-gray-900">{addr.label}</span>
                         {addr.isDefault && (
