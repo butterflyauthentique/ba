@@ -404,7 +404,7 @@ export default function CheckoutPage() {
           address: formData.addressLine2
             ? `${formData.address}, ${formData.addressLine2}, ${formData.city}, ${formData.state} ${formData.postalCode}`
             : `${formData.address}, ${formData.city}, ${formData.state} ${formData.postalCode}`,
-          contact: formData.phone,
+          contact: stripPhoneFormatting(formData.phone),
           name: `${formData.firstName} ${formData.lastName}`,
           email: formData.email
         }
@@ -439,7 +439,7 @@ export default function CheckoutPage() {
         prefill: {
           name: `${formData.firstName} ${formData.lastName}`,
           email: formData.email,
-          contact: formData.phone
+          contact: stripPhoneFormatting(formData.phone)
         },
         theme: {
           color: '#e12a47'
