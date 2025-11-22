@@ -449,6 +449,11 @@ export default function CheckoutPage() {
         }
       };
 
+      // Debug: Log the exact payload being sent to Razorpay
+      console.log('🔍 Razorpay Checkout Order:', JSON.stringify(checkoutOrder, null, 2));
+      console.log('🔍 Contact (stripped):', stripPhoneFormatting(formData.phone));
+      console.log('🔍 Contact length:', stripPhoneFormatting(formData.phone).length);
+
       const paymentResponse = await initializeRazorpayCheckout(checkoutOrder);
 
       console.log('🎯 Payment response received:', paymentResponse);

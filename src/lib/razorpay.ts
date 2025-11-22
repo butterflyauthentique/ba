@@ -178,7 +178,7 @@ export const initializeRazorpayCheckout = async (order: CheckoutOrder): Promise<
       return response;
     },
     prefill: order.prefill,
-    notes: order.notes,
+    ...(order.notes && { notes: order.notes }), // Only include notes if defined
     theme: {
       color: '#e12a47', // Butterfly Authentique brand color
     },
@@ -221,7 +221,7 @@ export const initializeRazorpayCheckout = async (order: CheckoutOrder): Promise<
         },
         sequence: ['block.banks', 'block.cards', 'block.netbanking', 'block.wallets'],
         preferences: {
-          show_default_blocks: false
+          show_default_blocks: true
         }
       }
     },
@@ -241,6 +241,9 @@ export const initializeRazorpayCheckout = async (order: CheckoutOrder): Promise<
       max_count: 3
     }
   };
+
+  // Debug: Log Razorpay options
+  console.log('🔧 Razorpay Options:', JSON.stringify(options, null, 2));
 
   return new Promise((resolve, reject) => {
     const rzp = new (window as any).Razorpay(options); // eslint-disable-line @typescript-eslint/no-explicit-any
