@@ -3,25 +3,26 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { 
-  ArrowLeft, 
-  CreditCard, 
-  Truck, 
-  Shield, 
-  CheckCircle, 
+import {
+  ArrowLeft,
+  CreditCard,
+  Truck,
+  Shield,
+  CheckCircle,
   AlertCircle,
   MapPin,
   Phone,
   Mail,
   User,
   Lock,
-  X
+  X,
+  Loader2
 } from 'lucide-react';
 import { useHydratedStore } from '@/lib/store';
 import { productService } from '@/lib/firebase';
-import { 
-  createRazorpayOrder, 
-  initializeRazorpayCheckout, 
+import {
+  createRazorpayOrder,
+  initializeRazorpayCheckout,
   verifyPayment,
   calculateOrderTotals,
   formatCurrency,
@@ -31,6 +32,61 @@ import {
 import { isValidEmail, isValidPhone, formatPhoneNumber } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import { submitHubSpotForm } from '@/lib/hubspot';
+import { useAuth } from '@/lib/auth';
+import { getSavedAddresses, saveAddress } from '@/lib/savedAddresses';
+import { SavedAddress } from '@/types/database';
+
+// Indian States and Union Territories
+const INDIAN_STATES = [
+  'Andhra Pradesh',
+  'Arunachal Pradesh',
+  'Assam',
+  'Bihar',
+  'Chhattisgarh',
+  'Goa',
+  'Gujarat',
+  'Haryana',
+  'Himachal Pradesh',
+  'Jharkhand',
+  'Karnataka',
+  'Kerala',
+  'Madhya Pradesh',
+  'Maharashtra',
+  'Manipur',
+  'Meghalaya',
+  'Mizoram',
+  'Nagaland',
+  'Odisha',
+  'Punjab',
+  'Rajasthan',
+  'Sikkim',
+  'Tamil Nadu',
+  'Telangana',
+  'Tripura',
+  'Uttar Pradesh',
+  'Uttarakhand',
+  'West Bengal',
+  'Andaman and Nicobar Islands',
+  'Chandigarh',
+  'Dadra and Nagar Haveli and Daman and Diu',
+  'Delhi',
+  'Jammu and Kashmir',
+  'Ladakh',
+  'Lakshadweep',
+  'Puducherry'
+];
+
+// Format phone number for display (98765 43210)
+const formatPhoneDisplay = (value: string): string => {
+  const cleaned = value.replace(/\D/g, '');
+  if (cleaned.length <= 5) return cleaned;
+  return `${cleaned.slice(0, 5)} ${cleaned.slice(5, 10)}`;
+};
+
+// Strip phone formatting for validation/submission
+const stripPhoneFormatting = (value: string): string => {
+  return value.replace(/\D/g, '');
+};
 
 interface CheckoutForm {
   firstName: string;
@@ -38,11 +94,16 @@ interface CheckoutForm {
   email: string;
   phone: string;
   address: string;
+  addressLine2: string;
   city: string;
   state: string;
   postalCode: string;
   country: string;
   notes: string;
+}
+
+interface FieldErrors {
+  [key: string]: string;
 }
 
 export default function CheckoutPage() {
@@ -53,12 +114,14 @@ export default function CheckoutPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [newsletterOptIn, setNewsletterOptIn] = useState(true);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formData, setFormData] = useState<CheckoutForm>({
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
     address: '',
+    addressLine2: '',
     city: '',
     state: '',
     postalCode: '',
@@ -87,19 +150,19 @@ export default function CheckoutPage() {
   // Calculate shipping cost based on cart total
   const calculateShippingCost = () => {
     if (!cart || cart.length === 0) return 0;
-    
+
     // Calculate subtotal
     const subtotal = cart.reduce((sum, item) => {
       const product = products.find(p => p.id === item.productId);
       const price = product?.price || 0;
       return sum + (price * item.quantity);
     }, 0);
-    
+
     // Free shipping for orders above ₹900
     if (subtotal >= 900) {
       return 0;
     }
-    
+
     // Standard shipping cost for orders below ₹900
     return 200;
   };
@@ -110,29 +173,189 @@ export default function CheckoutPage() {
 
 
 
-  // Handle form input changes
-  const handleInputChange = (field: keyof CheckoutForm, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const [isCheckingPincode, setIsCheckingPincode] = useState(false);
+
+  // Lookup city/state from postal code
+  const lookupPostalCode = async (pincode: string) => {
+    if (pincode.length !== 6) return;
+
+    setIsCheckingPincode(true);
+    try {
+      const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+      const data = await response.json();
+
+      if (data && data[0]?.Status === 'Success' && data[0]?.PostOffice?.length > 0) {
+        const postOffice = data[0].PostOffice[0];
+        const city = postOffice.District;
+        const state = postOffice.State;
+
+        setFormData(prev => ({
+          ...prev,
+          city: city,
+          state: state,
+          country: 'India'
+        }));
+
+        // Clear errors for city/state if they exist
+        setFieldErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.city;
+          delete newErrors.state;
+          return newErrors;
+        });
+
+        toast.success(`Location found: ${city}, ${state}`);
+      }
+    } catch (error) {
+      console.error('Error looking up pincode:', error);
+    } finally {
+      setIsCheckingPincode(false);
+    }
   };
 
-  // Validate form
+  const { user } = useAuth();
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+  const [isLoadingAddresses, setIsLoadingAddresses] = useState(false);
+  const [saveAddressChecked, setSaveAddressChecked] = useState(false);
+
+  // Load saved addresses
+  useEffect(() => {
+    const loadAddresses = async () => {
+      if (user) {
+        setIsLoadingAddresses(true);
+        try {
+          const addresses = await getSavedAddresses(user.id);
+          setSavedAddresses(addresses);
+        } catch (error) {
+          console.error('Error loading saved addresses:', error);
+        } finally {
+          setIsLoadingAddresses(false);
+        }
+      }
+    };
+
+    loadAddresses();
+  }, [user]);
+
+  // Handle saved address selection
+  const handleAddressSelect = (address: SavedAddress) => {
+    setFormData(prev => ({
+      ...prev,
+      firstName: address.firstName,
+      lastName: address.lastName,
+      phone: formatPhoneDisplay(address.phone),
+      address: address.addressLine1,
+      addressLine2: address.addressLine2 || '',
+      city: address.city,
+      state: address.state,
+      postalCode: address.postalCode,
+      country: address.country
+    }));
+
+    // Clear all errors
+    setFieldErrors({});
+
+    toast.success('Address applied');
+  };
+
+  // Handle form input changes
+  const handleInputChange = (field: keyof CheckoutForm, value: string) => {
+    // Apply phone formatting for display
+    if (field === 'phone') {
+      const formatted = formatPhoneDisplay(value);
+      setFormData(prev => ({ ...prev, [field]: formatted }));
+    }
+    // Handle postal code changes
+    else if (field === 'postalCode') {
+      const cleaned = value.replace(/\D/g, '').slice(0, 6);
+      setFormData(prev => ({ ...prev, [field]: cleaned }));
+
+      if (cleaned.length === 6) {
+        lookupPostalCode(cleaned);
+      }
+    }
+    else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
+
+    // Clear error for this field when user starts typing
+    if (fieldErrors[field]) {
+      setFieldErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
+  // Validate form with field-level errors
   const validateForm = (): boolean => {
-    if (!formData.firstName || !formData.lastName) {
-      toast.error('Please enter your full name');
+    const errors: FieldErrors = {};
+
+    // Name validation
+    if (!formData.firstName.trim()) {
+      errors.firstName = 'First name is required';
+    }
+    if (!formData.lastName.trim()) {
+      errors.lastName = 'Last name is required';
+    }
+
+    // Email validation
+    if (!formData.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!isValidEmail(formData.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+
+    // Phone validation (Indian format: 10 digits)
+    const cleanPhone = stripPhoneFormatting(formData.phone);
+    if (!cleanPhone) {
+      errors.phone = 'Phone number is required';
+    } else if (!isValidPhone(cleanPhone)) {
+      errors.phone = 'Please enter a valid 10-digit phone number';
+    }
+
+    // Address validation
+    if (!formData.address.trim()) {
+      errors.address = 'Address is required';
+    }
+
+    // City validation
+    if (!formData.city.trim()) {
+      errors.city = 'City is required';
+    }
+
+    // State validation
+    if (!formData.state.trim()) {
+      errors.state = 'State is required';
+    }
+
+    // Postal code validation (Indian format: 6 digits)
+    if (!formData.postalCode.trim()) {
+      errors.postalCode = 'Postal code is required';
+    } else if (!/^\d{6}$/.test(formData.postalCode.trim())) {
+      errors.postalCode = 'Please enter a valid 6-digit postal code';
+    }
+
+    // Country validation
+    if (!formData.country.trim()) {
+      errors.country = 'Country is required';
+    }
+
+    setFieldErrors(errors);
+
+    // If there are errors, focus on the first error field
+    if (Object.keys(errors).length > 0) {
+      const firstErrorField = Object.keys(errors)[0];
+      const element = document.querySelector(`[name="${firstErrorField}"]`) as HTMLElement;
+      if (element) {
+        element.focus();
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      toast.error(`Please fix the errors in the form`);
       return false;
     }
-    if (!isValidEmail(formData.email)) {
-      toast.error('Please enter a valid email address');
-      return false;
-    }
-    if (!isValidPhone(formData.phone)) {
-      toast.error('Please enter a valid phone number');
-      return false;
-    }
-    if (!formData.address || !formData.city || !formData.state || !formData.postalCode) {
-      toast.error('Please complete your shipping address');
-      return false;
-    }
+
     return true;
   };
 
@@ -147,6 +370,28 @@ export default function CheckoutPage() {
       return;
     }
 
+    // Save address if checked
+    if (user && saveAddressChecked) {
+      try {
+        await saveAddress(user.id, {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          phone: stripPhoneFormatting(formData.phone),
+          addressLine1: formData.address,
+          addressLine2: formData.addressLine2,
+          city: formData.city,
+          state: formData.state,
+          postalCode: formData.postalCode,
+          country: formData.country,
+          label: 'Home', // Default label
+          isDefault: savedAddresses.length === 0
+        });
+      } catch (error) {
+        console.error('Error saving address:', error);
+        // Don't block payment on address save error
+      }
+    }
+
     setIsLoading(true);
 
     try {
@@ -156,7 +401,9 @@ export default function CheckoutPage() {
         currency: 'INR',
         receipt: `BA-${Date.now()}`,
         notes: {
-          address: `${formData.address}, ${formData.city}, ${formData.state} ${formData.postalCode}`,
+          address: formData.addressLine2
+            ? `${formData.address}, ${formData.addressLine2}, ${formData.city}, ${formData.state} ${formData.postalCode}`
+            : `${formData.address}, ${formData.city}, ${formData.state} ${formData.postalCode}`,
           contact: formData.phone,
           name: `${formData.firstName} ${formData.lastName}`,
           email: formData.email
@@ -164,7 +411,7 @@ export default function CheckoutPage() {
       };
 
       const orderResponse = await createRazorpayOrder(orderData);
-      
+
       if (!orderResponse.success) {
         throw new Error('Failed to create order');
       }
@@ -200,9 +447,9 @@ export default function CheckoutPage() {
       };
 
       const paymentResponse = await initializeRazorpayCheckout(checkoutOrder);
-      
+
       console.log('🎯 Payment response received:', paymentResponse);
-      
+
       // Verify payment with timeout
       const verificationPromise = verifyPayment(paymentResponse);
       const timeoutPromise = new Promise<boolean>((resolve) => {
@@ -211,11 +458,11 @@ export default function CheckoutPage() {
           resolve(true);
         }, 10000); // 10 second timeout
       });
-      
+
       const isVerified = await Promise.race([verificationPromise, timeoutPromise]);
-      
+
       console.log('🎯 Payment verification result:', isVerified);
-      
+
       if (isVerified) {
         toast.success('Payment successful! Your order has been placed.');
         clearCart();
@@ -231,7 +478,7 @@ export default function CheckoutPage() {
       }
     } catch (error: any) {
       console.error('Payment error:', error);
-      
+
       // Handle specific error types
       let errorCode = 'PAYMENT_FAILED';
       let errorDescription = 'Payment failed. Please try again.';
@@ -265,7 +512,7 @@ export default function CheckoutPage() {
         error_description: errorDescription,
         error_step: errorStep
       });
-      
+
       router.push(`/checkout/failure?${errorParams.toString()}`);
     } finally {
       setIsLoading(false);
@@ -338,9 +585,8 @@ export default function CheckoutPage() {
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center space-x-2">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
-                    currentStep >= 1 ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-600'
-                  }`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${currentStep >= 1 ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-600'
+                    }`}>
                     1
                   </div>
                   <span className={`text-sm font-medium ${currentStep >= 1 ? 'text-gray-900' : 'text-gray-500'}`}>
@@ -349,9 +595,8 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex-1 h-px bg-gray-200 mx-4"></div>
                 <div className="flex items-center space-x-2">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
-                    currentStep >= 2 ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-600'
-                  }`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${currentStep >= 2 ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-600'
+                    }`}>
                     2
                   </div>
                   <span className={`text-sm font-medium ${currentStep >= 2 ? 'text-gray-900' : 'text-gray-500'}`}>
@@ -360,6 +605,46 @@ export default function CheckoutPage() {
                 </div>
               </div>
             </div>
+
+            {/* Saved Addresses */}
+            {user && savedAddresses.length > 0 && (
+              <div className="bg-white rounded-lg p-6 shadow-sm mb-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <MapPin className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h2 className="font-serif text-xl font-bold text-gray-900">
+                      Saved Addresses
+                    </h2>
+                    <p className="text-sm text-gray-600">
+                      Select a saved address to auto-fill
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  {savedAddresses.map((addr) => (
+                    <div
+                      key={addr.id}
+                      onClick={() => handleAddressSelect(addr)}
+                      className="border border-gray-200 rounded-lg p-4 cursor-pointer hover:border-red-500 hover:bg-red-50 transition-colors relative group"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="font-medium text-gray-900">{addr.label}</span>
+                        {addr.isDefault && (
+                          <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full">Default</span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600">{addr.firstName} {addr.lastName}</p>
+                      <p className="text-sm text-gray-600 line-clamp-1">{addr.addressLine1}</p>
+                      <p className="text-sm text-gray-600">{addr.city}, {addr.state} {addr.postalCode}</p>
+                      <p className="text-sm text-gray-600 mt-1">{formatPhoneDisplay(addr.phone)}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Shipping Form */}
             <div className="bg-white rounded-lg p-6 shadow-sm">
@@ -384,11 +669,18 @@ export default function CheckoutPage() {
                   </label>
                   <input
                     type="text"
+                    name="firstName"
                     value={formData.firstName}
                     onChange={(e) => handleInputChange('firstName', e.target.value)}
-                    className="input w-full"
+                    className={`input w-full ${fieldErrors.firstName ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                     placeholder="Enter first name"
                   />
+                  {fieldErrors.firstName && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {fieldErrors.firstName}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -396,11 +688,18 @@ export default function CheckoutPage() {
                   </label>
                   <input
                     type="text"
+                    name="lastName"
                     value={formData.lastName}
                     onChange={(e) => handleInputChange('lastName', e.target.value)}
-                    className="input w-full"
+                    className={`input w-full ${fieldErrors.lastName ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                     placeholder="Enter last name"
                   />
+                  {fieldErrors.lastName && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {fieldErrors.lastName}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -410,12 +709,19 @@ export default function CheckoutPage() {
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
                       type="email"
+                      name="email"
                       value={formData.email}
                       onChange={(e) => handleInputChange('email', e.target.value)}
-                      className="input w-full pl-10"
+                      className={`input w-full pl-10 ${fieldErrors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                       placeholder="Enter email address"
                     />
                   </div>
+                  {fieldErrors.email && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {fieldErrors.email}
+                    </p>
+                  )}
                   <label className="mt-3 flex items-start gap-3 text-sm text-gray-700">
                     <input
                       type="checkbox"
@@ -437,27 +743,58 @@ export default function CheckoutPage() {
                     <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
                       type="tel"
+                      name="phone"
                       value={formData.phone}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
-                      className="input w-full pl-10"
-                      placeholder="Enter phone number"
+                      className={`input w-full pl-10 ${fieldErrors.phone ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
+                      placeholder="Enter 10-digit phone number"
+                      maxLength={10}
                     />
                   </div>
+                  {fieldErrors.phone && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {fieldErrors.phone}
+                    </p>
+                  )}
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Address *
+                    Address Line 1 *
                   </label>
                   <div className="relative">
-                    <MapPin className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                    <textarea
+                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="text"
+                      name="address"
                       value={formData.address}
                       onChange={(e) => handleInputChange('address', e.target.value)}
-                      className="input w-full pl-10 resize-none"
-                      rows={3}
-                      placeholder="Enter your complete address"
+                      className={`input w-full pl-10 ${fieldErrors.address ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
+                      placeholder="House/Flat No., Street Name, Area"
                     />
                   </div>
+                  {fieldErrors.address && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {fieldErrors.address}
+                    </p>
+                  )}
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Address Line 2 (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    name="addressLine2"
+                    value={formData.addressLine2}
+                    onChange={(e) => handleInputChange('addressLine2', e.target.value)}
+                    className="input w-full"
+                    placeholder="Landmark, Building/Complex Name (Optional)"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Add nearby landmark or building name for easier delivery
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -465,35 +802,69 @@ export default function CheckoutPage() {
                   </label>
                   <input
                     type="text"
+                    name="city"
                     value={formData.city}
                     onChange={(e) => handleInputChange('city', e.target.value)}
-                    className="input w-full"
+                    className={`input w-full ${fieldErrors.city ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                     placeholder="Enter city"
                   />
+                  {fieldErrors.city && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {fieldErrors.city}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     State *
                   </label>
-                  <input
-                    type="text"
+                  <select
+                    name="state"
                     value={formData.state}
                     onChange={(e) => handleInputChange('state', e.target.value)}
-                    className="input w-full"
-                    placeholder="Enter state"
-                  />
+                    className={`input w-full ${fieldErrors.state ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
+                  >
+                    <option value="">Select State</option>
+                    {INDIAN_STATES.map((state) => (
+                      <option key={state} value={state}>
+                        {state}
+                      </option>
+                    ))}
+                  </select>
+                  {fieldErrors.state && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {fieldErrors.state}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Postal Code *
                   </label>
-                  <input
-                    type="text"
-                    value={formData.postalCode}
-                    onChange={(e) => handleInputChange('postalCode', e.target.value)}
-                    className="input w-full"
-                    placeholder="Enter postal code"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      name="postalCode"
+                      value={formData.postalCode}
+                      onChange={(e) => handleInputChange('postalCode', e.target.value)}
+                      className={`input w-full ${fieldErrors.postalCode ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
+                      placeholder="Enter 6-digit postal code"
+                      maxLength={6}
+                    />
+                    {isCheckingPincode && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
+                      </div>
+                    )}
+                  </div>
+                  {fieldErrors.postalCode && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {fieldErrors.postalCode}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -501,11 +872,18 @@ export default function CheckoutPage() {
                   </label>
                   <input
                     type="text"
+                    name="country"
                     value={formData.country}
                     onChange={(e) => handleInputChange('country', e.target.value)}
-                    className="input w-full"
+                    className={`input w-full ${fieldErrors.country ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                     placeholder="Enter country"
                   />
+                  {fieldErrors.country && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {fieldErrors.country}
+                    </p>
+                  )}
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -519,6 +897,21 @@ export default function CheckoutPage() {
                     placeholder="Any special instructions for delivery"
                   />
                 </div>
+
+                {/* Save Address Checkbox */}
+                {user && (
+                  <div className="md:col-span-2 mt-2">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={saveAddressChecked}
+                        onChange={(e) => setSaveAddressChecked(e.target.checked)}
+                        className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                      />
+                      <span className="text-sm text-gray-700">Save this address for future orders</span>
+                    </label>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -542,19 +935,19 @@ export default function CheckoutPage() {
                 {cart.map((item) => {
                   const product = products.find(p => p.id === item.productId);
                   if (!product) return null;
-                  
 
-                  
+
+
                   return (
                     <div key={item.productId} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
                       <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden">
                         <Image
                           src={
-                            product.featuredImage || 
-                            (Array.isArray(product.images) && product.images.length > 0 
-                              ? (typeof product.images[0] === 'string' 
-                                  ? product.images[0] 
-                                  : product.images[0]?.url || '/logo.png')
+                            product.featuredImage ||
+                            (Array.isArray(product.images) && product.images.length > 0
+                              ? (typeof product.images[0] === 'string'
+                                ? product.images[0]
+                                : product.images[0]?.url || '/logo.png')
                               : '/logo.png')
                           }
                           alt={product.name}
@@ -628,10 +1021,10 @@ export default function CheckoutPage() {
                     <span className="text-gray-900">Calculating...</span>
                   </div>
                   <div className="border-t border-gray-200 pt-4">
-                                      <div className="flex justify-between text-lg font-bold">
-                    <span className="text-gray-900">Total</span>
-                    <span className="text-red-600">Calculating...</span>
-                  </div>
+                    <div className="flex justify-between text-lg font-bold">
+                      <span className="text-gray-900">Total</span>
+                      <span className="text-red-600">Calculating...</span>
+                    </div>
                   </div>
                   <div className="text-xs text-gray-500 text-center">
                     * All prices include 18% GST

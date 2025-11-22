@@ -416,4 +416,23 @@ export interface WishlistItem {
   isPublic?: boolean;
   originalPrice?: number; // For price tracking
   lastPriceCheck?: Timestamp;
+}
+
+// Saved Address Types
+export interface SavedAddress {
+  id: string;
+  userId: string;
+  label: string; // "Home", "Office", "Other"
+  isDefault: boolean;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 } 
