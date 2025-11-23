@@ -17,7 +17,7 @@ export default function OrdersPage() {
 
     useEffect(() => {
         const fetchOrders = async () => {
-            if (!user?.email) {
+            if (!user?.id) {
                 setIsLoading(false);
                 return;
             }
@@ -26,7 +26,7 @@ export default function OrdersPage() {
                 const ordersRef = collection(db, 'orders');
                 const q = query(
                     ordersRef,
-                    where('customer.email', '==', user.email),
+                    where('userId', '==', user.id),
                     orderBy('createdAt', 'desc')
                 );
 
