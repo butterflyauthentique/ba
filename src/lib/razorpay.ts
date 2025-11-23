@@ -2,16 +2,16 @@
 import { loadScript } from './utils';
 
 // Razorpay configuration from environment variables
-const keyId = (process.env.NODE_ENV === 'production'
-  ? process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID
-  : process.env.NEXT_PUBLIC_RAZORPAY_TEST_KEY_ID) || "rzp_test_YourTestKey";
+// TEMPORARY: Force test key for debugging
+const keyId = process.env.NEXT_PUBLIC_RAZORPAY_TEST_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_YourTestKey";
 
 // Debug configuration in development
 if (typeof window !== 'undefined') {
   console.log('🔧 [Client] Razorpay Configuration:', {
     keyId: keyId,
     isProduction: keyId.startsWith('rzp_live_'),
-    env: process.env.NODE_ENV
+    env: process.env.NODE_ENV,
+    usingTestKey: keyId.startsWith('rzp_test_')
   });
 }
 
