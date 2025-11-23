@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { CheckCircle, ArrowRight, Home, ShoppingBag, Mail, Package, Printer, Calendar } from 'lucide-react';
+import { CheckCircle, ArrowRight, Home, ShoppingBag, Mail, Package, Printer, Calendar, Truck, MapPin } from 'lucide-react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Image from 'next/image';
