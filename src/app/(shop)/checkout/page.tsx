@@ -463,13 +463,19 @@ export default function CheckoutPage() {
 
       // Construct full order data for backend
       const fullOrderData = {
-        items: cart.map(item => ({
-          productId: item.productId,
-          quantity: item.quantity,
-          price: products.find(p => p.id === item.productId)?.price || 0,
-          name: products.find(p => p.id === item.productId)?.name || 'Unknown Product',
-          image: products.find(p => p.id === item.productId)?.images?.[0] || ''
-        })),
+        userId: user?.id || null, // Pass userId to link order to user account
+        items: cart.map(item => {
+          const product = products.find(p => p.id === item.productId);
+          return {
+            productId: item.productId,
+            quantity: item.quantity,
+            price: product?.price || 0,
+            name: product?.name || 'Unknown Product',
+            productName: product?.name || 'Unknown Product', // For Shiprocket compatibility
+            sku: product?.sku || item.productId, // For Shiprocket compatibility
+            image: product?.images?.[0] || ''
+          };
+        }),
         total: orderTotals.total,
         subtotal: orderTotals.subtotal,
         shipping: orderTotals.shipping,

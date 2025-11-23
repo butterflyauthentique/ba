@@ -1,6 +1,10 @@
-import * as functions from 'firebase-functions';
+import { onRequest } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import * as cors from 'cors';
+import { setGlobalOptions } from 'firebase-functions/v2';
+
+// Set global options for 2nd Gen functions
+setGlobalOptions({ region: 'us-central1', memory: '256MiB' });
 const Razorpay = require('razorpay');
 
 import { createShiprocketOrder } from './shiprocket';
@@ -99,7 +103,7 @@ const isAdmin = async (uid: string, email?: string): Promise<boolean> => {
 };
 
 // Get all products (for admin panel)
-export const getProducts = functions.https.onRequest((req, res) => {
+export const getProducts = onRequest(async (req, res) => {
   return corsHandler(req, res, async () => {
     try {
       const productsSnapshot = await db.collection('products').get();
@@ -117,7 +121,7 @@ export const getProducts = functions.https.onRequest((req, res) => {
 });
 
 // Get product by ID (for admin panel)
-export const getProduct = functions.https.onRequest((req, res) => {
+export const getProduct = onRequest(async (req, res) => {
   return corsHandler(req, res, async () => {
     try {
       const { id } = req.params;
@@ -141,7 +145,7 @@ export const getProduct = functions.https.onRequest((req, res) => {
 });
 
 // Create/Update product (for admin panel)
-export const saveProduct = functions.https.onRequest((req, res) => {
+export const saveProduct = onRequest(async (req, res) => {
   return corsHandler(req, res, async () => {
     try {
       const { id, productData } = req.body;
@@ -171,7 +175,7 @@ export const saveProduct = functions.https.onRequest((req, res) => {
 });
 
 // Delete product (for admin panel)
-export const deleteProduct = functions.https.onRequest((req, res) => {
+export const deleteProduct = onRequest(async (req, res) => {
   return corsHandler(req, res, async () => {
     try {
       const { id } = req.body;
@@ -190,7 +194,7 @@ export const deleteProduct = functions.https.onRequest((req, res) => {
 });
 
 // Get all orders (for admin panel)
-export const getOrders = functions.https.onRequest((req, res) => {
+export const getOrders = onRequest(async (req, res) => {
   return corsHandler(req, res, async () => {
     try {
       const ordersSnapshot = await db.collection('orders').get();
@@ -208,7 +212,7 @@ export const getOrders = functions.https.onRequest((req, res) => {
 });
 
 // Get admin statistics (for admin panel dashboard)
-export const getAdminStats = functions.https.onRequest((req, res) => {
+export const getAdminStats = onRequest(async (req, res) => {
   return corsHandler(req, res, async () => {
     try {
       // Get total products
@@ -253,7 +257,7 @@ export const getAdminStats = functions.https.onRequest((req, res) => {
 });
 
 // Admin authentication endpoint
-export const checkAdmin = functions.https.onRequest((req, res) => {
+export const checkAdmin = onRequest(async (req, res) => {
   return corsHandler(req, res, async () => {
     try {
       const { uid } = req.body;
@@ -272,7 +276,7 @@ export const checkAdmin = functions.https.onRequest((req, res) => {
 });
 
 // Get all admins (for admin panel)
-export const getAdmins = functions.https.onRequest((req, res) => {
+export const getAdmins = onRequest(async (req, res) => {
   return corsHandler(req, res, async () => {
     try {
       const adminsSnapshot = await db.collection('admins').get();
@@ -299,7 +303,7 @@ export const getAdmins = functions.https.onRequest((req, res) => {
 });
 
 // Add new admin (for admin panel)
-export const addAdmin = functions.https.onRequest((req, res) => {
+export const addAdmin = onRequest(async (req, res) => {
   return corsHandler(req, res, async () => {
     try {
       const { email, name, currentUserEmail } = req.body;
@@ -353,7 +357,7 @@ export const addAdmin = functions.https.onRequest((req, res) => {
 });
 
 // Remove admin (for admin panel)
-export const removeAdmin = functions.https.onRequest((req, res) => {
+export const removeAdmin = onRequest(async (req, res) => {
   return corsHandler(req, res, async () => {
     try {
       const { email, currentUserEmail } = req.body;
@@ -392,7 +396,7 @@ export const removeAdmin = functions.https.onRequest((req, res) => {
 });
 
 // Next.js server function for handling static files and routing
-export const nextjsServer = functions.https.onRequest((req, res) => {
+export const nextjsServer = onRequest(async (req, res) => {
   return corsHandler(req, res, async () => {
     try {
       const { path } = req;
@@ -425,7 +429,7 @@ const getRazorpay = () => {
 };
 
 // Create Razorpay order
-export const createRazorpayOrder = functions.https.onRequest((req, res) => {
+export const createRazorpayOrder = onRequest(async (req, res) => {
   return corsHandler(req, res, async () => {
     try {
       const { amount, currency = 'INR', receipt, notes } = req.body;
@@ -476,7 +480,7 @@ export const createRazorpayOrder = functions.https.onRequest((req, res) => {
 });
 
 // Verify Razorpay payment and create order
-export const verifyRazorpayPayment = functions.https.onRequest((req, res) => {
+export const verifyRazorpayPayment = onRequest(async (req, res) => {
   return corsHandler(req, res, async () => {
     try {
       const {
@@ -675,7 +679,7 @@ export const verifyRazorpayPayment = functions.https.onRequest((req, res) => {
 });
 
 // Razorpay webhook handler for real-time order/payment updates
-export const razorpayWebhook = functions.https.onRequest((req, res) => {
+export const razorpayWebhook = onRequest(async (req, res) => {
   return corsHandler(req, res, async () => {
     try {
       // Verify webhook signature for security
@@ -794,7 +798,7 @@ const handleRefundUpdate = async (refund: any) => {
 };
 
 // Admin API to manually sync orders with Razorpay
-export const syncOrdersWithRazorpay = functions.https.onRequest((req, res) => {
+export const syncOrdersWithRazorpay = onRequest(async (req, res) => {
   return corsHandler(req, res, async () => {
     try {
       // Verify admin authentication

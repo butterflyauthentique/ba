@@ -242,7 +242,7 @@ export function convertToShiprocketOrder(order: Order): ShiprocketOrderPayload {
         billing_city: order.shippingAddress.city,
         billing_pincode: order.shippingAddress.postalCode,
         billing_state: order.shippingAddress.state,
-        billing_country: order.shippingAddress.country,
+        billing_country: order.shippingAddress.country || 'India',
         billing_email: order.customer.email,
         billing_phone: order.customer.phone || '',
 
@@ -255,7 +255,7 @@ export function convertToShiprocketOrder(order: Order): ShiprocketOrderPayload {
         shipping_city: shippingIsBilling ? undefined : order.shippingAddress.city,
         shipping_pincode: shippingIsBilling ? undefined : order.shippingAddress.postalCode,
         shipping_state: shippingIsBilling ? undefined : order.shippingAddress.state,
-        shipping_country: shippingIsBilling ? undefined : order.shippingAddress.country,
+        shipping_country: shippingIsBilling ? undefined : (order.shippingAddress.country || 'India'),
         shipping_email: shippingIsBilling ? undefined : order.customer.email,
         shipping_phone: shippingIsBilling ? undefined : order.customer.phone,
 
@@ -297,6 +297,8 @@ export async function createShiprocketOrder(order: Order): Promise<ShiprocketOrd
         console.log(`📦 Creating Shiprocket order for ${order.orderNumber}`);
 
         const payload = convertToShiprocketOrder(order);
+
+        console.log('📦 Shiprocket Payload:', JSON.stringify(payload, null, 2));
 
         const response = await shiprocketRequest<ShiprocketOrderResponse>(
             '/orders/create/adhoc',

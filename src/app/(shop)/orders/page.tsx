@@ -88,7 +88,7 @@ export default function OrdersPage() {
                     <p className="text-gray-600 mb-6">
                         Please sign in to view your orders.
                     </p>
-                    <Link href="/auth/signin" className="btn-primary">
+                    <Link href="/auth/login" className="btn-primary">
                         Sign In
                     </Link>
                 </div>
