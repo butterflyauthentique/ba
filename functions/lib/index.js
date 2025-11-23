@@ -380,8 +380,8 @@ exports.nextjsServer = functions.https.onRequest((req, res) => {
 });
 // Initialize Razorpay client (dotenv-based with legacy fallback)
 const getRazorpay = () => {
-    const keyId = process.env.RAZORPAY_KEY_ID || functions.config().razorpay?.key_id;
-    const keySecret = process.env.RAZORPAY_KEY_SECRET || functions.config().razorpay?.key_secret;
+    const keyId = process.env.RAZORPAY_KEY_ID;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
     if (!keyId || !keySecret) {
         throw new Error('Razorpay credentials not configured');
     }
@@ -412,6 +412,7 @@ exports.createRazorpayOrder = functions.https.onRequest((req, res) => {
                 currency: currency,
                 receipt: receipt,
                 notes: notes || {},
+                payment_capture: 1, // Auto-capture payment
             });
             return res.json({
                 success: true,
@@ -455,7 +456,7 @@ exports.verifyRazorpayPayment = functions.https.onRequest((req, res) => {
             // Verify signature
             const crypto = require('crypto');
             const text = `${razorpay_order_id}|${razorpay_payment_id}`;
-            const keySecret = process.env.RAZORPAY_KEY_SECRET || functions.config().razorpay?.key_secret;
+            const keySecret = process.env.RAZORPAY_KEY_SECRET;
             if (!keySecret) {
                 return res.status(500).json({ success: false, error: 'Payment configuration missing' });
             }
@@ -567,7 +568,7 @@ exports.razorpayWebhook = functions.https.onRequest((req, res) => {
     return corsHandler(req, res, async () => {
         try {
             // Verify webhook signature for security
-            const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET || functions.config().razorpay?.webhook_secret;
+            const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
             const signature = req.headers['x-razorpay-signature'];
             if (webhookSecret && signature) {
                 const crypto = require('crypto');
@@ -684,8 +685,8 @@ exports.syncOrdersWithRazorpay = functions.https.onRequest((req, res) => {
                 return res.status(403).json({ error: 'Admin access required' });
             }
             // Initialize Razorpay client
-            const razorpayKeyId = functions.config().razorpay?.key_id;
-            const razorpayKeySecret = functions.config().razorpay?.key_secret;
+            const razorpayKeyId = process.env.RAZORPAY_KEY_ID;
+            const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET;
             if (!razorpayKeyId || !razorpayKeySecret) {
                 return res.status(500).json({ error: 'Razorpay credentials not configured' });
             }
