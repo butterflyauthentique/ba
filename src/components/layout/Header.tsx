@@ -11,9 +11,8 @@ import { useHydratedStore } from '@/lib/store';
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  const { user, signOut } = useAuth();
+
+  const { user, signOut, loading: authLoading } = useAuth();
   const { cart } = useHydratedStore();
   const pathname = usePathname();
 
@@ -26,7 +25,6 @@ export default function Header() {
       } else {
         setIsUserAdmin(false);
       }
-      setIsLoading(false);
     };
 
     checkAdminStatus();
@@ -49,52 +47,47 @@ export default function Header() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <img 
-              src="/logo.png" 
-              alt="Butterfly Authentique" 
+            <img
+              src="/logo.png"
+              alt="Butterfly Authentique"
               className="h-8 w-auto"
             />
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <Link 
-              href="/" 
-              className={`text-sm font-medium transition-colors ${
-                pathname === '/' ? 'text-rose-600' : 'text-gray-700 hover:text-rose-600'
-              }`}
+            <Link
+              href="/"
+              className={`text-sm font-medium transition-colors ${pathname === '/' ? 'text-rose-600' : 'text-gray-700 hover:text-rose-600'
+                }`}
             >
               Home
             </Link>
-            <Link 
-              href="/shop?category=all" 
-              className={`text-sm font-medium transition-colors ${
-                pathname.startsWith('/shop') ? 'text-rose-600' : 'text-gray-700 hover:text-rose-600'
-              }`}
+            <Link
+              href="/shop?category=all"
+              className={`text-sm font-medium transition-colors ${pathname.startsWith('/shop') ? 'text-rose-600' : 'text-gray-700 hover:text-rose-600'
+                }`}
             >
               Shop
             </Link>
-            <Link 
-              href="/about" 
-              className={`text-sm font-medium transition-colors ${
-                pathname === '/about' ? 'text-rose-600' : 'text-gray-700 hover:text-rose-600'
-              }`}
+            <Link
+              href="/about"
+              className={`text-sm font-medium transition-colors ${pathname === '/about' ? 'text-rose-600' : 'text-gray-700 hover:text-rose-600'
+                }`}
             >
               About
             </Link>
-            <Link 
-              href="/blog" 
-              className={`text-sm font-medium transition-colors ${
-                pathname.startsWith('/blog') ? 'text-rose-600' : 'text-gray-700 hover:text-rose-600'
-              }`}
+            <Link
+              href="/blog"
+              className={`text-sm font-medium transition-colors ${pathname.startsWith('/blog') ? 'text-rose-600' : 'text-gray-700 hover:text-rose-600'
+                }`}
             >
               Blog
             </Link>
-            <Link 
-              href="/contact" 
-              className={`text-sm font-medium transition-colors ${
-                pathname === '/contact' ? 'text-rose-600' : 'text-gray-700 hover:text-rose-600'
-              }`}
+            <Link
+              href="/contact"
+              className={`text-sm font-medium transition-colors ${pathname === '/contact' ? 'text-rose-600' : 'text-gray-700 hover:text-rose-600'
+                }`}
             >
               Contact
             </Link>
@@ -123,70 +116,74 @@ export default function Header() {
             </Link>
 
             {/* User Menu */}
-            {!isLoading && (
-              <div className="relative">
-                {user ? (
-                  <div className="flex items-center space-x-2">
-                    {/* Admin Panel Link */}
-                    {isUserAdmin && (
-                      <Link
-                        href="/admin"
-                        className="text-sm font-medium text-rose-600 hover:text-rose-700 transition-colors"
-                      >
-                        Admin Panel
-                      </Link>
-                    )}
-                    
-                    {/* User Dropdown */}
-                    <div className="relative group">
-                      <button className="flex items-center space-x-2 p-2 text-gray-700 hover:text-gray-900 transition-colors">
-                        <User className="h-5 w-5" />
-                        <span className="text-sm font-medium">{user.name}</span>
-                      </button>
-                      
-                      {/* Dropdown Menu */}
-                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                        <div className="py-1">
-                          <Link
-                            href="/profile"
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            Profile
-                          </Link>
-                          <Link
-                            href="/orders"
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            My Orders
-                          </Link>
-                          <button
-                            onClick={handleSignOut}
-                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            Sign Out
-                          </button>
-                        </div>
+            <div className="relative">
+              {authLoading ? (
+                // Loading skeleton
+                <div className="flex items-center space-x-2">
+                  <div className="h-8 w-8 bg-gray-200 rounded-full animate-pulse" />
+                  <div className="h-4 w-20 bg-gray-200 rounded animate-pulse" />
+                </div>
+              ) : user ? (
+                <div className="flex items-center space-x-2">
+                  {/* Admin Panel Link */}
+                  {isUserAdmin && (
+                    <Link
+                      href="/admin"
+                      className="text-sm font-medium text-rose-600 hover:text-rose-700 transition-colors"
+                    >
+                      Admin Panel
+                    </Link>
+                  )}
+
+                  {/* User Dropdown */}
+                  <div className="relative group">
+                    <button className="flex items-center space-x-2 p-2 text-gray-700 hover:text-gray-900 transition-colors">
+                      <User className="h-5 w-5" />
+                      <span className="text-sm font-medium">{user.name}</span>
+                    </button>
+
+                    {/* Dropdown Menu */}
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                      <div className="py-1">
+                        <Link
+                          href="/profile"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          Profile
+                        </Link>
+                        <Link
+                          href="/orders"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          My Orders
+                        </Link>
+                        <button
+                          onClick={handleSignOut}
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          Sign Out
+                        </button>
                       </div>
                     </div>
                   </div>
-                ) : (
-                  <div className="flex items-center space-x-4">
-                    <Link
-                      href="/login"
-                      className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
-                    >
-                      Sign In
-                    </Link>
-                    <Link
-                      href="/register"
-                      className="bg-rose-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-rose-700 transition-colors"
-                    >
-                      Sign Up
-                    </Link>
-                  </div>
-                )}
-              </div>
-            )}
+                </div>
+              ) : (
+                <div className="flex items-center space-x-4">
+                  <Link
+                    href="/login"
+                    className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="bg-rose-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-rose-700 transition-colors"
+                  >
+                    Sign Up
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Mobile Menu Button */}
@@ -202,47 +199,42 @@ export default function Header() {
         {isMenuOpen && (
           <div className="md:hidden border-t border-gray-200 py-4">
             <nav className="space-y-4">
-              <Link 
-                href="/" 
-                className={`block text-sm font-medium transition-colors ${
-                  pathname === '/' ? 'text-rose-600' : 'text-gray-700 hover:text-rose-600'
-                }`}
+              <Link
+                href="/"
+                className={`block text-sm font-medium transition-colors ${pathname === '/' ? 'text-rose-600' : 'text-gray-700 hover:text-rose-600'
+                  }`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Home
               </Link>
-              <Link 
-                href="/shop" 
-                className={`block text-sm font-medium transition-colors ${
-                  pathname === '/shop' ? 'text-rose-600' : 'text-gray-700 hover:text-rose-600'
-                }`}
+              <Link
+                href="/shop"
+                className={`block text-sm font-medium transition-colors ${pathname === '/shop' ? 'text-rose-600' : 'text-gray-700 hover:text-rose-600'
+                  }`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Shop
               </Link>
-              <Link 
-                href="/about" 
-                className={`block text-sm font-medium transition-colors ${
-                  pathname === '/about' ? 'text-rose-600' : 'text-gray-700 hover:text-rose-600'
-                }`}
+              <Link
+                href="/about"
+                className={`block text-sm font-medium transition-colors ${pathname === '/about' ? 'text-rose-600' : 'text-gray-700 hover:text-rose-600'
+                  }`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 About
               </Link>
-              <Link 
-                href="/blog" 
-                className={`block text-sm font-medium transition-colors ${
-                  pathname.startsWith('/blog') ? 'text-rose-600' : 'text-gray-700 hover:text-rose-600'
-                }`}
+              <Link
+                href="/blog"
+                className={`block text-sm font-medium transition-colors ${pathname.startsWith('/blog') ? 'text-rose-600' : 'text-gray-700 hover:text-rose-600'
+                  }`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Blog
               </Link>
-              <Link 
-                href="/contact" 
-                className={`block text-sm font-medium transition-colors ${
-                  pathname === '/contact' ? 'text-rose-600' : 'text-gray-700 hover:text-rose-600'
-                }`}
+              <Link
+                href="/contact"
+                className={`block text-sm font-medium transition-colors ${pathname === '/contact' ? 'text-rose-600' : 'text-gray-700 hover:text-rose-600'
+                  }`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Contact
@@ -252,8 +244,8 @@ export default function Header() {
             {/* Mobile Actions */}
             <div className="mt-6 space-y-4">
               <div className="flex items-center space-x-4">
-                <Link 
-                  href="/cart" 
+                <Link
+                  href="/cart"
                   className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
@@ -268,67 +260,71 @@ export default function Header() {
               </div>
 
               {/* Mobile User Menu */}
-              {!isLoading && (
-                <div className="border-t border-gray-200 pt-4">
-                  {user ? (
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <User className="h-5 w-5 text-gray-400" />
-                        <span className="text-sm font-medium text-gray-700">{user.name}</span>
-                      </div>
-                      
-                      {/* Admin Panel Link */}
-                      {isUserAdmin && (
-                        <Link
-                          href="/admin"
-                          className="block text-sm font-medium text-rose-600 hover:text-rose-700 transition-colors"
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          Admin Panel
-                        </Link>
-                      )}
-                      
-                      <Link
-                        href="/profile"
-                        className="block text-sm text-gray-700 hover:text-gray-900 transition-colors"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Profile
-                      </Link>
-                      <Link
-                        href="/orders"
-                        className="block text-sm text-gray-700 hover:text-gray-900 transition-colors"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        My Orders
-                      </Link>
-                      <button
-                        onClick={handleSignOut}
-                        className="block w-full text-left text-sm text-gray-700 hover:text-gray-900 transition-colors"
-                      >
-                        Sign Out
-                      </button>
+              <div className="border-t border-gray-200 pt-4">
+                {authLoading ? (
+                  // Loading skeleton
+                  <div className="flex items-center space-x-2">
+                    <div className="h-8 w-8 bg-gray-200 rounded-full animate-pulse" />
+                    <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
+                  </div>
+                ) : user ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <User className="h-5 w-5 text-gray-400" />
+                      <span className="text-sm font-medium text-gray-700">{user.name}</span>
                     </div>
-                  ) : (
-                    <div className="space-y-2">
+
+                    {/* Admin Panel Link */}
+                    {isUserAdmin && (
                       <Link
-                        href="/login"
-                        className="block text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+                        href="/admin"
+                        className="block text-sm font-medium text-rose-600 hover:text-rose-700 transition-colors"
                         onClick={() => setIsMenuOpen(false)}
                       >
-                        Sign In
+                        Admin Panel
                       </Link>
-                      <Link
-                        href="/register"
-                        className="block bg-rose-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-rose-700 transition-colors text-center"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Sign Up
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              )}
+                    )}
+
+                    <Link
+                      href="/profile"
+                      className="block text-sm text-gray-700 hover:text-gray-900 transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Profile
+                    </Link>
+                    <Link
+                      href="/orders"
+                      className="block text-sm text-gray-700 hover:text-gray-900 transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      My Orders
+                    </Link>
+                    <button
+                      onClick={handleSignOut}
+                      className="block w-full text-left text-sm text-gray-700 hover:text-gray-900 transition-colors"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Link
+                      href="/login"
+                      className="block text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      href="/register"
+                      className="block bg-rose-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-rose-700 transition-colors text-center"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Sign Up
+                    </Link>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
