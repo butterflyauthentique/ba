@@ -450,6 +450,7 @@ export const createRazorpayOrder = functions.https.onRequest((req, res) => {
         currency: currency,
         receipt: receipt,
         notes: notes || {},
+        payment_capture: 1, // Auto-capture payment
       });
 
       return res.json({

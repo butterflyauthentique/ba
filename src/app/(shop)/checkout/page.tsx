@@ -458,6 +458,9 @@ export default function CheckoutPage() {
 
       console.log('🎯 Payment response received:', paymentResponse);
 
+      // Show verification status
+      const verificationToast = toast.loading('Verifying payment...');
+
       // Verify payment with timeout
       const verificationPromise = verifyPayment(paymentResponse);
       const timeoutPromise = new Promise<boolean>((resolve) => {
@@ -468,6 +471,8 @@ export default function CheckoutPage() {
       });
 
       const isVerified = await Promise.race([verificationPromise, timeoutPromise]);
+
+      toast.dismiss(verificationToast);
 
       console.log('🎯 Payment verification result:', isVerified);
 
