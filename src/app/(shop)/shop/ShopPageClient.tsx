@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { 
-  Search, 
-  Filter, 
-  Heart, 
-  ShoppingBag, 
+import {
+  Search,
+  Filter,
+  Heart,
+  ShoppingBag,
   Star,
   Plus,
   Minus,
@@ -28,8 +28,8 @@ interface ShopPageClientProps {
   initialCategory?: string; // Initial category to select
 }
 
-export default function ShopPageClient({ 
-  products: initialProducts 
+export default function ShopPageClient({
+  products: initialProducts
 }: ShopPageClientProps) {
   const { addToCart } = useHydratedStore();
   const { user } = useAuth();
@@ -46,7 +46,7 @@ export default function ShopPageClient({
   // Initialize category from URL or default to 'all'
   useEffect(() => {
     const categoryFromUrl = searchParams?.get('category');
-    
+
     // If no category in URL, set it to 'all' and update URL
     if (!categoryFromUrl) {
       const params = new URLSearchParams(searchParams?.toString() || '');
@@ -65,7 +65,7 @@ export default function ShopPageClient({
   useEffect(() => {
     const params = new URLSearchParams(searchParams?.toString() || '');
     params.set('category', selectedCategory);
-    
+
     // Only update if the URL would actually change
     const currentCategory = params.get('category');
     if (currentCategory !== selectedCategory) {
@@ -97,15 +97,15 @@ export default function ShopPageClient({
   // Filter products based on search and category
   const filteredProducts = products.filter(product => {
     // Check if product matches the selected category (case-insensitive)
-    const matchesCategory = selectedCategory === 'all' || 
+    const matchesCategory = selectedCategory === 'all' ||
       product.category?.toLowerCase() === selectedCategory.toLowerCase();
-    
+
     // Check if product matches the search term
-    const matchesSearch = !searchTerm || searchTerm === '' || 
+    const matchesSearch = !searchTerm || searchTerm === '' ||
       product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.artist?.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     return matchesCategory && matchesSearch;
   });
 
@@ -146,7 +146,7 @@ export default function ShopPageClient({
   useEffect(() => {
     const loadWishlistItems = async () => {
       if (!user) return;
-      
+
       try {
         const items = await WishlistService.getUserWishlist(user.id);
         const productIds = new Set(items.map(item => item.productId));
@@ -167,7 +167,7 @@ export default function ShopPageClient({
 
     try {
       const result = await WishlistService.toggleWishlistItem(user.id, product);
-      
+
       if (result.added) {
         setWishlistItems(prev => new Set([...prev, product.id]));
         toast.success('Added to wishlist');
@@ -187,7 +187,7 @@ export default function ShopPageClient({
 
   // Get unique categories from initial products (not filtered products)
   const categories = ['all', ...Array.from(new Set(initialProducts.map(p => p.category.toLowerCase())))];
-  
+
   // Format category for display (capitalize first letter)
   const formatCategory = (category: string) => {
     if (category === 'all') return 'All Categories';
@@ -312,14 +312,14 @@ export default function ShopPageClient({
                         src={typeof product.images[0] === 'string' ? product.images[0] : product.images[0]?.url || ''}
                         alt={product.name}
                         fill
-                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        className={`object-cover transition-transform duration-300 group-hover:scale-105 ${product.stock <= 0 ? 'opacity-60' : ''}`}
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                         priority={false}
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           const currentImage = product.images[0];
                           const imageUrl = typeof currentImage === 'string' ? currentImage : currentImage?.url || '';
-                          
+
                           if (imageUrl && product.images.length > 1) {
                             // Try next image in array
                             const currentIndex = product.images.findIndex((img: any) => {
@@ -340,45 +340,56 @@ export default function ShopPageClient({
                         }}
                       />
                     ) : null}
-                    
+
+                    {/* Out of Stock Overlay */}
+                    {product.stock <= 0 && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <span className="bg-white px-4 py-2 rounded-lg font-bold text-gray-900 text-sm sm:text-base">
+                          OUT OF STOCK
+                        </span>
+                      </div>
+                    )}
+
                     {/* Placeholder for missing images */}
                     {(!product.images || product.images.length === 0) && (
                       <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
                         <ShoppingBag className="w-12 h-12 text-gray-400" />
                       </div>
                     )}
-                    
+
                     {/* Fallback placeholder (hidden by default) */}
                     <div className="image-placeholder absolute inset-0 hidden items-center justify-center bg-gray-200">
                       <ShoppingBag className="w-12 h-12 text-gray-400" />
                     </div>
-                    
+
                     {/* Wishlist Button */}
                     <button
                       onClick={(e) => {
                         e.preventDefault();
                         handleAddToWishlist(product);
                       }}
-                      className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md transition-all hover:bg-red-50 hover:shadow-lg"
+                      className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md transition-all hover:bg-red-50 hover:shadow-lg z-10"
                     >
                       <Heart className={`w-4 h-4 ${wishlistItems.has(product.id) ? 'text-red-600 fill-current' : 'text-gray-600'}`} />
                     </button>
 
                     {/* Share Button (card) */}
-                    <div className="absolute top-3 left-3">
+                    <div className="absolute top-3 left-3 z-10">
                       <ShareMenu url={`/product/${product.slug || product.id}`} title={product.name} description={product.metaDescription || ''} />
                     </div>
-                    
+
                     {/* Quick Add to Cart (desktop hover) */}
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleAddToCart(product);
-                      }}
-                      className="hidden sm:inline-flex absolute bottom-3 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
-                    >
-                      Quick Add
-                    </button>
+                    {product.stock > 0 && (
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleAddToCart(product);
+                        }}
+                        className="hidden sm:inline-flex absolute bottom-3 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700 z-10"
+                      >
+                        Quick Add
+                      </button>
+                    )}
                   </div>
 
                   {/* Product Content */}
@@ -387,30 +398,36 @@ export default function ShopPageClient({
                     <div className="text-[10px] sm:text-xs font-medium text-red-600 uppercase tracking-wider mb-1 sm:mb-2">
                       {product.category}
                     </div>
-                    
+
                     <h3 className="product-card__title line-clamp-2 text-sm sm:text-base">{product.name}</h3>
                     <p className="hidden sm:block text-gray-600 text-sm mb-3 line-clamp-2">
                       {product.description}
                     </p>
-                    
+
                     {/* Rating */}
                     <div className="hidden sm:flex items-center gap-1 mb-3">
                       <Star className="w-4 h-4 text-yellow-400 fill-current" />
                       <span className="text-sm font-medium text-gray-900">{product.rating || 0}</span>
                       <span className="text-sm text-gray-500">({product.reviews || 0})</span>
                     </div>
-                    
+
                     <div className="product-card__price text-sm sm:text-base">₹{product.price.toLocaleString()}</div>
-                    
+
                     <div className="product-card__actions">
-                      <button 
+                      <button
                         onClick={(e) => {
                           e.preventDefault();
-                          handleAddToCart(product);
+                          if (product.stock > 0) {
+                            handleAddToCart(product);
+                          }
                         }}
-                        className="btn-primary text-xs sm:text-sm px-3 py-2 sm:px-4 sm:py-2 flex-1"
+                        disabled={product.stock <= 0}
+                        className={`text-xs sm:text-sm px-3 py-2 sm:px-4 sm:py-2 flex-1 rounded-lg font-semibold transition-colors ${product.stock <= 0
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            : 'btn-primary'
+                          }`}
                       >
-                        Add to Cart
+                        {product.stock <= 0 ? 'Out of Stock' : 'Add to Cart'}
                       </button>
                     </div>
                   </div>

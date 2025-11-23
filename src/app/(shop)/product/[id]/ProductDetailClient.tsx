@@ -4,13 +4,13 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { 
-  ArrowLeft, 
-  Heart, 
-  ShoppingBag, 
-  Star, 
-  Truck, 
-  Shield, 
+import {
+  ArrowLeft,
+  Heart,
+  ShoppingBag,
+  Star,
+  Truck,
+  Shield,
   ChevronLeft,
   ChevronRight,
   Plus,
@@ -50,7 +50,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   const router = useRouter();
   const { addToCart } = useHydratedStore();
   const { user } = useAuth();
-  
+
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -83,7 +83,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
         setIsInWishlist(false);
         return;
       }
-      
+
       try {
         const inWishlist = await WishlistService.isInWishlist(user.id, product.id);
         setIsInWishlist(inWishlist);
@@ -161,7 +161,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
 
   const nextImage = () => {
     if (product.images.length > 1) {
-      setSelectedImageIndex((prev) => 
+      setSelectedImageIndex((prev) =>
         prev === product.images.length - 1 ? 0 : prev + 1
       );
     }
@@ -169,7 +169,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
 
   const prevImage = () => {
     if (product.images.length > 1) {
-      setSelectedImageIndex((prev) => 
+      setSelectedImageIndex((prev) =>
         prev === 0 ? product.images.length - 1 : prev - 1
       );
     }
@@ -238,7 +238,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
     "@type": "Product",
     "name": product.name,
     "description": product.description,
-            "image": (typeof product.images[0] === 'string' ? product.images[0] : product.images[0]?.url),
+    "image": (typeof product.images[0] === 'string' ? product.images[0] : product.images[0]?.url),
     "brand": {
       "@type": "Brand",
       "name": "Butterfly Authentique"
@@ -300,7 +300,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                 {product.images && product.images.length > 0 ? (
                   <>
                     <Image
-                                              src={typeof product.images[selectedImageIndex] === 'string' ? product.images[selectedImageIndex] : product.images[selectedImageIndex]?.url || ''}
+                      src={typeof product.images[selectedImageIndex] === 'string' ? product.images[selectedImageIndex] : product.images[selectedImageIndex]?.url || ''}
                       alt={product.name}
                       fill
                       className="object-contain"
@@ -309,12 +309,12 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         if (product.images.length > 1) {
-                          const currentIndex = product.images.findIndex((img: any) => 
+                          const currentIndex = product.images.findIndex((img: any) =>
                             (typeof img === 'string' ? img : img?.url) === target.src
                           );
                           const nextIndex = (currentIndex + 1) % product.images.length;
-                                                      const nextImage = product.images[nextIndex];
-                            const nextImageUrl = typeof nextImage === 'string' ? nextImage : nextImage?.url || '';
+                          const nextImage = product.images[nextIndex];
+                          const nextImageUrl = typeof nextImage === 'string' ? nextImage : nextImage?.url || '';
                           target.src = typeof nextImage === 'string' ? nextImage : nextImage?.url;
                         } else {
                           target.style.display = 'none';
@@ -325,11 +325,11 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                         }
                       }}
                     />
-                    
+
                     <div className="main-image-placeholder absolute inset-0 hidden items-center justify-center bg-gray-100">
                       <Package className="w-16 h-16 text-gray-400" />
                     </div>
-                    
+
                     {product.images.length > 1 && (
                       <>
                         <button
@@ -348,7 +348,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                         </button>
                       </>
                     )}
-                    
+
                     {product.images.length > 1 && (
                       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/60 text-white px-3 py-1 rounded-full text-sm z-10">
                         {selectedImageIndex + 1} / {product.images.length}
@@ -370,11 +370,10 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   <button
                     key={index}
                     onClick={() => setSelectedImageIndex(index)}
-                    className={`relative aspect-square rounded-md overflow-hidden border-2 transition-all duration-200 bg-white ${
-                      selectedImageIndex === index 
-                        ? 'border-red-600 shadow-md ring-2 ring-red-100' 
+                    className={`relative aspect-square rounded-md overflow-hidden border-2 transition-all duration-200 bg-white ${selectedImageIndex === index
+                        ? 'border-red-600 shadow-md ring-2 ring-red-100'
                         : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
-                    }`}
+                      }`}
                     aria-label={`View image ${index + 1} of ${product.images.length}`}
                   >
                     <Image
@@ -404,10 +403,15 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
           {/* Product Information */}
           <div className="space-y-6 lg:sticky lg:top-8">
             {/* Category and Badges */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <span className="text-sm font-medium text-red-600 uppercase tracking-wider">
                 {product.category}
               </span>
+              {isOutOfStock && (
+                <span className="px-3 py-1 text-sm font-bold bg-gray-100 text-gray-800 rounded-full border-2 border-gray-300">
+                  OUT OF STOCK
+                </span>
+              )}
               {product.badges && product.badges.map((badge, index) => (
                 <span
                   key={index}
@@ -437,11 +441,10 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    className={`w-5 h-5 ${
-                      i < Math.floor(product.rating || 0)
+                    className={`w-5 h-5 ${i < Math.floor(product.rating || 0)
                         ? 'text-yellow-400 fill-current'
                         : 'text-gray-300'
-                    }`}
+                      }`}
                   />
                 ))}
               </div>
@@ -480,11 +483,10 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                     <button
                       key={index}
                       onClick={() => handleVariantSelect({ ...variant, inStock: true })}
-                      className={`p-3 border-2 rounded-lg text-left transition-colors ${
-                        selectedVariant?.name === variant.name
+                      className={`p-3 border-2 rounded-lg text-left transition-colors ${selectedVariant?.name === variant.name
                           ? 'border-red-600 bg-red-50'
                           : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                        }`}
                     >
                       <div className="font-medium text-gray-900">{variant.name}</div>
                       <div className="text-sm text-gray-600">
@@ -558,7 +560,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                 >
                   <Share2 className="w-5 h-5 text-gray-600" />
                 </button>
-                
+
                 {/* Share Menu Dropdown */}
                 {showShareMenu && (
                   <div className="absolute right-0 top-14 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
@@ -623,7 +625,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
             {/* Product Details */}
             <div className="border-t border-gray-200 pt-6 space-y-4">
               <h3 className="text-lg font-semibold text-gray-900">Product Details</h3>
-              
+
               {product.description && (
                 <div>
                   <h4 className="font-medium text-gray-900 mb-2">Description</h4>
