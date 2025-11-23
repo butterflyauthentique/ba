@@ -8,7 +8,8 @@ setGlobalOptions({ region: 'us-central1', memory: '256MiB' });
 const Razorpay = require('razorpay');
 
 import { createShiprocketOrder } from './shiprocket';
-
+import { migrateOrdersUserId } from './migrations/migrateOrdersUserId';
+export { migrateOrdersUserId };
 // Initialize Firebase Admin
 admin.initializeApp();
 
@@ -1046,3 +1047,6 @@ const importOrdersInDateRange = async (razorpay: any, startDate: Date, endDate: 
 
 // Export Shipping webhook handler (renamed to avoid Shiprocket URL restrictions)
 export { shippingWebhook } from './shippingWebhook';
+
+// Export migration function for one-time userId backfill
+export { migrateOrdersUserId } from './migrations/migrateOrdersUserId';

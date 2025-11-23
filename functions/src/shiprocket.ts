@@ -231,7 +231,7 @@ export function convertToShiprocketOrder(order: Order): ShiprocketOrderPayload {
         order_id: order.orderNumber,
         order_date: order.createdAt.toDate().toISOString().split('T')[0], // YYYY-MM-DD
         pickup_location: pickupLocation,
-        channel_id: '',
+        channel_id: process.env.SHIPROCKET_CHANNEL_ID || '9005923',
         comment: order.customerNotes || '',
 
         // Billing address
