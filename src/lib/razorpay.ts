@@ -182,49 +182,6 @@ export const initializeRazorpayCheckout = async (order: CheckoutOrder): Promise<
     theme: {
       color: '#e12a47', // Butterfly Authentique brand color
     },
-    // Payment method restrictions
-    config: {
-      display: {
-        blocks: {
-          banks: {
-            name: 'Pay using UPI',
-            instruments: [
-              {
-                method: 'upi'
-              }
-            ]
-          },
-          cards: {
-            name: 'Pay using Cards',
-            instruments: [
-              {
-                method: 'card'
-              }
-            ]
-          },
-          netbanking: {
-            name: 'Pay using Net Banking',
-            instruments: [
-              {
-                method: 'netbanking'
-              }
-            ]
-          },
-          wallets: {
-            name: 'Pay using Wallets',
-            instruments: [
-              {
-                method: 'wallet'
-              }
-            ]
-          }
-        },
-        sequence: ['block.banks', 'block.cards', 'block.netbanking', 'block.wallets'],
-        preferences: {
-          show_default_blocks: true
-        }
-      }
-    },
     modal: {
       ondismiss: function () {
         // Restore console functions
@@ -234,11 +191,6 @@ export const initializeRazorpayCheckout = async (order: CheckoutOrder): Promise<
         // Handle modal dismissal
         console.log('Payment modal dismissed');
       }
-    },
-    // Add error handling for security headers
-    retry: {
-      enabled: true,
-      max_count: 3
     }
   };
 
