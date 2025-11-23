@@ -469,9 +469,11 @@ exports.verifyRazorpayPayment = functions.https.onRequest((req, res) => {
                 try {
                     // Upsert customer profile and get a customerId
                     const customerId = await upsertCustomerProfile(orderData?.customer, orderData?.total || 0);
+                    // Generate order number
+                    const orderNumber = `BA-${Date.now()}`;
                     // Create order in Firestore
                     const orderRef = await db.collection('orders').add({
-                        orderNumber: `BA-${Date.now()}`,
+                        orderNumber,
                         razorpayOrderId: razorpay_order_id,
                         razorpayPaymentId: razorpay_payment_id,
                         status: 'pending',
@@ -482,7 +484,50 @@ exports.verifyRazorpayPayment = functions.https.onRequest((req, res) => {
                         createdAt: admin.firestore.FieldValue.serverTimestamp(),
                         updatedAt: admin.firestore.FieldValue.serverTimestamp()
                     });
-                    console.log('✅ Order created in Firestore with ID:', orderRef.id);
+                    console.log('✅ Order created in Firestore with ID:', orderRef.id, 'Order Number:', orderNumber);
+                    // ------------------------------------------------------------------
+                    // UPDATE INVENTORY
+                    // ------------------------------------------------------------------
+                    try {
+                        console.log('📦 Updating inventory...');
+                        const items = orderData.items || [];
+                        await db.runTransaction(async (transaction) => {
+                            for (const item of items) {
+                                if (!item.productId)
+                                    continue;
+                                const productRef = db.collection('products').doc(item.productId);
+                                const productDoc = await transaction.get(productRef);
+                                if (!productDoc.exists) {
+                                    console.warn(`Product ${item.productId} not found during inventory update`);
+                                    continue;
+                                }
+                                const productData = productDoc.data();
+                                const quantityToDeduct = item.quantity || 1;
+                                // 1. Update main product stock
+                                const currentStock = productData?.stock || 0;
+                                const newStock = Math.max(0, currentStock - quantityToDeduct);
+                                const updateData = { stock: newStock };
+                                // 2. Update variant stock if applicable
+                                if (item.variantId && productData?.variants) {
+                                    const variants = productData.variants.map((variant) => {
+                                        if (variant.id === item.variantId) {
+                                            const currentVariantStock = variant.stock || 0;
+                                            const newVariantStock = Math.max(0, currentVariantStock - quantityToDeduct);
+                                            return { ...variant, stock: newVariantStock };
+                                        }
+                                        return variant;
+                                    });
+                                    updateData.variants = variants;
+                                }
+                                transaction.update(productRef, updateData);
+                            }
+                        });
+                        console.log('✅ Inventory updated successfully');
+                    }
+                    catch (inventoryError) {
+                        console.error('⚠️ Failed to update inventory:', inventoryError);
+                        // Don't fail the request, just log it. Admin can manually adjust if needed.
+                    }
                     // ------------------------------------------------------------------
                     // AUTOMATIC SHIPROCKET ORDER CREATION
                     // ------------------------------------------------------------------
@@ -493,7 +538,7 @@ exports.verifyRazorpayPayment = functions.https.onRequest((req, res) => {
                         // We use new Date() for createdAt since serverTimestamp() is not readable yet
                         const fullOrderData = {
                             id: orderRef.id,
-                            orderNumber: `BA-${Date.now()}`,
+                            orderNumber,
                             razorpayOrderId: razorpay_order_id,
                             razorpayPaymentId: razorpay_payment_id,
                             status: 'pending',
@@ -520,8 +565,10 @@ exports.verifyRazorpayPayment = functions.https.onRequest((req, res) => {
                     }
                     catch (srError) {
                         console.error('⚠️ Failed to create Shiprocket order automatically:', srError);
+                        console.error('Shiprocket error details:', srError.message || srError);
                         // We don't fail the whole request, just log the error
                         // The admin can still manually create it from the dashboard
+                        shiprocketData = { error: srError.message || 'Failed to create Shiprocket order' };
                     }
                     return res.json({
                         success: true,
@@ -530,9 +577,9 @@ exports.verifyRazorpayPayment = functions.https.onRequest((req, res) => {
                         paymentId: razorpay_payment_id,
                         orderId: razorpay_order_id,
                         firestoreOrderId: orderRef.id,
-                        orderNumber: `BA-${Date.now()}`,
+                        orderNumber,
                         customerId: customerId || null,
-                        shiprocket: shiprocketData // Return Shiprocket status to client
+                        shiprocket: shiprocketData // Return Shiprocket status to client (includes error if failed)
                     });
                 }
                 catch (error) {

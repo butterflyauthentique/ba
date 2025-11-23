@@ -1,20 +1,21 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { CheckCircle, ArrowRight, Home, ShoppingBag, Mail } from 'lucide-react';
+import { CheckCircle, ArrowRight, Home, ShoppingBag, Mail, Package } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 
 export default function CheckoutSuccessPage() {
   const router = useRouter();
-  // Removed user from store - will use Firebase Auth directly
+  const searchParams = useSearchParams();
+  const [orderDetails, setOrderDetails] = useState<{ orderId: string; orderNumber: string } | null>(null);
 
-  // Redirect if accessed directly without payment
   useEffect(() => {
-    // You can add additional validation here
-    // For now, we'll just show the success page
-  }, []);
+    const orderId = searchParams.get('orderId') || '';
+    const orderNumber = searchParams.get('orderNumber') || '';
+    setOrderDetails({ orderId, orderNumber });
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center py-12 px-4">
@@ -38,7 +39,9 @@ export default function CheckoutSuccessPage() {
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Order Number</span>
-              <span className="font-semibold text-gray-900">BA-{Date.now()}</span>
+              <span className="font-semibold text-gray-900">
+                {orderDetails?.orderNumber || 'Processing...'}
+              </span>
             </div>
             <div className="flex items-center justify-between text-sm mt-2">
               <span className="text-gray-600">Payment Status</span>
@@ -79,14 +82,22 @@ export default function CheckoutSuccessPage() {
 
           {/* Action Buttons */}
           <div className="space-y-4">
-            <Link 
-              href="/shop" 
+            <Link
+              href="/orders"
               className="w-full btn-primary flex items-center justify-center space-x-2"
+            >
+              <Package className="w-5 h-5" />
+              <span>View My Orders</span>
+            </Link>
+
+            <Link
+              href="/shop"
+              className="w-full btn-secondary flex items-center justify-center space-x-2"
             >
               <ShoppingBag className="w-5 h-5" />
               <span>Continue Shopping</span>
             </Link>
-            
+
             {/* Divider */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -96,9 +107,9 @@ export default function CheckoutSuccessPage() {
                 <span className="bg-white px-2 text-gray-500">or</span>
               </div>
             </div>
-            
-            <Link 
-              href="/" 
+
+            <Link
+              href="/"
               className="w-full btn-secondary flex items-center justify-center space-x-2"
             >
               <Home className="w-5 h-5" />
@@ -112,8 +123,8 @@ export default function CheckoutSuccessPage() {
               Need help? Contact our support team
             </p>
             <div className="flex items-center justify-center space-x-4 text-xs">
-              <Link 
-                href="/contact" 
+              <Link
+                href="/contact"
                 className="flex items-center space-x-1 text-red-600 hover:text-red-700"
               >
                 <Mail className="w-4 h-4" />

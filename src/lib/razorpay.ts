@@ -89,7 +89,7 @@ export const createRazorpayOrder = async (orderData: {
 };
 
 // Verify payment signature
-export const verifyPayment = async (paymentData: PaymentResponse): Promise<boolean> => {
+export const verifyPayment = async (paymentData: PaymentResponse): Promise<any> => {
   try {
     console.log('🔍 Verifying payment with data:', paymentData);
 
@@ -113,19 +113,8 @@ export const verifyPayment = async (paymentData: PaymentResponse): Promise<boole
     const data = await response.json();
     console.log('🔍 Verification response data:', data);
 
-    // Check if the response has the expected structure
-    if (data.verified === true) {
-      console.log('✅ Payment verification successful');
-      return true;
-    } else if (data.verified === false) {
-      console.log('❌ Payment verification failed');
-      return false;
-    } else {
-      console.log('⚠️ Unexpected verification response format:', data);
-      // If we can't determine verification status, assume success for now
-      // This prevents users from getting stuck on processing
-      return true;
-    }
+    // Return the full data object for caller to use
+    return data as any;
   } catch (error) {
     console.error('❌ Error verifying payment:', error);
 

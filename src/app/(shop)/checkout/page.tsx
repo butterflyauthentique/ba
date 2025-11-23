@@ -462,30 +462,24 @@ export default function CheckoutPage() {
       const verificationToast = toast.loading('Verifying payment...');
 
       // Verify payment with timeout
-      const verificationPromise = verifyPayment(paymentResponse);
-      const timeoutPromise = new Promise<boolean>((resolve) => {
-        setTimeout(() => {
-          console.log('⏰ Payment verification timeout - assuming success');
-          resolve(true);
-        }, 10000); // 10 second timeout
-      });
-
-      const isVerified = await Promise.race([verificationPromise, timeoutPromise]);
+      const verificationResult = await verifyPayment(paymentResponse);
 
       toast.dismiss(verificationToast);
 
-      console.log('🎯 Payment verification result:', isVerified);
+      console.log('🎯 Payment verification result:', verificationResult);
 
-      if (isVerified) {
+      if (verificationResult && verificationResult.success) {
         toast.success('Payment successful! Your order has been placed.');
         clearCart();
-        router.push('/checkout/success');
+        const orderId = verificationResult.firestoreOrderId || '';
+        const orderNumber = verificationResult.orderNumber || '';
+        const query = new URLSearchParams({ orderId, orderNumber }).toString();
+        router.push(`/checkout/success?${query}`);
       } else {
-        // Payment verification failed
         const errorParams = new URLSearchParams({
           error_code: 'VERIFICATION_FAILED',
-          error_description: 'Payment verification failed. Please try again.',
-          error_step: 'verification'
+          error_description: verificationResult?.message || 'Payment verification failed. Please try again.',
+          error_step: 'verification',
         });
         router.push(`/checkout/failure?${errorParams.toString()}`);
       }
