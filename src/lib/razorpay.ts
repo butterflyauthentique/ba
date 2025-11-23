@@ -161,44 +161,44 @@ export const initializeRazorpayCheckout = async (order: CheckoutOrder): Promise<
     originalConsoleWarn.apply(console, args);
   };
 
-  const options = {
-    key: razorpayConfig.keyId,
-    amount: order.amount,
-    currency: order.currency,
-    name: 'Butterfly Authentique',
-    description: 'Purchase at Butterfly Authentique',
-    image: '/android-chrome-192x192.png',
-    order_id: order.id,
-    handler: function (response: PaymentResponse) {
-      // Restore console functions
-      console.error = originalConsoleError;
-      console.warn = originalConsoleWarn;
-
-      // Handle payment success
-      console.log('Payment successful:', response);
-      return response;
-    },
-    prefill: order.prefill,
-    ...(order.notes && { notes: order.notes }), // Only include notes if defined
-    theme: {
-      color: '#e12a47', // Butterfly Authentique brand color
-    },
-    modal: {
-      ondismiss: function () {
+  return new Promise((resolve, reject) => {
+    const options = {
+      key: razorpayConfig.keyId,
+      amount: order.amount,
+      currency: order.currency,
+      name: 'Butterfly Authentique',
+      description: 'Purchase at Butterfly Authentique',
+      image: '/android-chrome-192x192.png',
+      order_id: order.id,
+      handler: function (response: PaymentResponse) {
         // Restore console functions
         console.error = originalConsoleError;
         console.warn = originalConsoleWarn;
 
-        // Handle modal dismissal
-        console.log('Payment modal dismissed');
+        // Handle payment success
+        console.log('Payment successful:', response);
+        resolve(response);
+      },
+      prefill: order.prefill,
+      ...(order.notes && { notes: order.notes }), // Only include notes if defined
+      theme: {
+        color: '#e12a47', // Butterfly Authentique brand color
+      },
+      modal: {
+        ondismiss: function () {
+          // Restore console functions
+          console.error = originalConsoleError;
+          console.warn = originalConsoleWarn;
+
+          // Handle modal dismissal
+          console.log('Payment modal dismissed');
+        }
       }
-    }
-  };
+    };
 
-  // Debug: Log Razorpay options
-  console.log('🔧 Razorpay Options:', JSON.stringify(options, null, 2));
+    // Debug: Log Razorpay options
+    console.log('🔧 Razorpay Options:', JSON.stringify(options, null, 2));
 
-  return new Promise((resolve, reject) => {
     const rzp = new (window as any).Razorpay(options); // eslint-disable-line @typescript-eslint/no-explicit-any
 
     rzp.on('payment.failed', function (response: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -208,15 +208,6 @@ export const initializeRazorpayCheckout = async (order: CheckoutOrder): Promise<
 
       console.error('Payment failed:', response.error);
       reject(new Error(response.error.description || 'Payment failed'));
-    });
-
-    rzp.on('payment.success', function (response: PaymentResponse) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      // Restore console functions
-      console.error = originalConsoleError;
-      console.warn = originalConsoleWarn;
-
-      console.log('Payment success event triggered:', response);
-      resolve(response);
     });
 
     // Add error handling for initialization
