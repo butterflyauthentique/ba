@@ -89,7 +89,7 @@ export const createRazorpayOrder = async (orderData: {
 };
 
 // Verify payment signature
-export const verifyPayment = async (paymentData: PaymentResponse): Promise<any> => {
+export const verifyPayment = async (paymentData: PaymentResponse, orderData?: any): Promise<any> => {
   try {
     console.log('🔍 Verifying payment with data:', paymentData);
 
@@ -98,7 +98,10 @@ export const verifyPayment = async (paymentData: PaymentResponse): Promise<any> 
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(paymentData),
+      body: JSON.stringify({
+        ...paymentData,
+        orderData
+      }),
     });
 
     console.log('🔍 Verification response status:', response.status);
@@ -118,11 +121,13 @@ export const verifyPayment = async (paymentData: PaymentResponse): Promise<any> 
   } catch (error) {
     console.error('❌ Error verifying payment:', error);
 
-    // For now, if verification fails, we'll assume the payment was successful
-    // since we received a successful payment response from Razorpay
-    // This prevents users from getting stuck on the processing screen
-    console.log('⚠️ Assuming payment success due to verification error');
-    return true;
+    // Return error object instead of true
+    return {
+      success: false,
+      verified: false,
+      message: error instanceof Error ? error.message : 'Payment verification failed. Please contact support.',
+      error: 'VERIFICATION_ERROR'
+    };
   }
 };
 

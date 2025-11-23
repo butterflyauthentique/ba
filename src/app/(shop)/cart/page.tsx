@@ -35,7 +35,7 @@ export default function CartPage() {
   }, []);
 
   const cartItems = cart || [];
-  
+
   // Group items by productId and variantId to handle duplicates properly
   const groupedItems = cartItems.reduce((groups, item) => {
     const key = `${item.productId}-${item.variantId || 'default'}`;
@@ -67,7 +67,26 @@ export default function CartPage() {
 
   const handleQuantityChange = (productId: string, newQuantity: number, variantId?: string) => {
     if (newQuantity < 1) return;
-            updateCartQuantity(productId, newQuantity, variantId);
+
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    let availableStock = product.stock;
+
+    // If it's a variant, check variant stock
+    if (variantId && product.variants) {
+      const variant = product.variants.find(v => v.id === variantId);
+      if (variant) {
+        availableStock = variant.stock;
+      }
+    }
+
+    if (newQuantity > availableStock) {
+      toast.error(`Sorry, only ${availableStock} items available in stock`);
+      return;
+    }
+
+    updateCartQuantity(productId, newQuantity, variantId);
   };
 
   const handleRemoveItem = (productId: string, variantId?: string) => {
@@ -112,7 +131,7 @@ export default function CartPage() {
               Your Cart is Empty
             </h1>
             <p className="text-lg text-gray-600 mb-8 max-w-md mx-auto">
-              Looks like you haven&apos;t added any items to your cart yet. 
+              Looks like you haven&apos;t added any items to your cart yet.
               Start shopping to discover our beautiful collection!
             </p>
             <Link href="/shop" className="btn-primary">
@@ -153,7 +172,7 @@ export default function CartPage() {
                   Cart Items
                 </h2>
               </div>
-              
+
               <div className="divide-y divide-gray-200">
                 {uniqueCartItems.map((item, index) => {
                   const product = products.find(p => p.id === item.productId);
@@ -190,10 +209,10 @@ export default function CartPage() {
                         <div className="w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
                           <Image
                             src={
-                              (Array.isArray(product.images) && product.images.length > 0 
-                                ? (typeof product.images[0] === 'string' 
-                                    ? product.images[0] 
-                                    : product.images[0]?.url || '/logo.png')
+                              (Array.isArray(product.images) && product.images.length > 0
+                                ? (typeof product.images[0] === 'string'
+                                  ? product.images[0]
+                                  : product.images[0]?.url || '/logo.png')
                                 : '/logo.png')
                             }
                             alt={product.name}
@@ -208,7 +227,7 @@ export default function CartPage() {
                           <h3 className="font-semibold text-gray-900 mb-3">
                             {product.name}
                           </h3>
-                          
+
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               {/* Quantity Controls */}
@@ -230,7 +249,7 @@ export default function CartPage() {
                                   <Plus className="w-4 h-4" />
                                 </button>
                               </div>
-                              
+
                               {/* Price */}
                               <div className="text-right">
                                 <div className="font-semibold text-gray-900">
@@ -266,20 +285,20 @@ export default function CartPage() {
               <h2 className="font-secondary text-xl font-bold text-gray-900 mb-6">
                 Order Summary
               </h2>
-              
+
               <div className="space-y-4 mb-6">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Subtotal (GST Included)</span>
                   <span className="font-medium">₹{subtotal.toLocaleString()}</span>
                 </div>
-                
+
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Shipping</span>
                   <span className="font-medium">
                     {shipping === 0 ? 'Free' : `₹${shipping.toLocaleString()}`}
                   </span>
                 </div>
-                
+
                 <div className="border-t border-gray-200 pt-4">
                   <div className="flex justify-between font-semibold text-lg">
                     <span>Total</span>
@@ -287,7 +306,7 @@ export default function CartPage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="text-xs text-gray-500 text-center mb-4">
                 * All prices include 18% GST
               </div>
@@ -321,8 +340,8 @@ export default function CartPage() {
               </div>
 
               {/* Continue Shopping */}
-              <Link 
-                href="/shop" 
+              <Link
+                href="/shop"
                 className="btn-secondary w-full flex items-center justify-center"
               >
                 Continue Shopping

@@ -461,8 +461,57 @@ export default function CheckoutPage() {
       // Show verification status
       const verificationToast = toast.loading('Verifying payment...');
 
+      // Construct full order data for backend
+      const fullOrderData = {
+        items: cart.map(item => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          price: products.find(p => p.id === item.productId)?.price || 0,
+          name: products.find(p => p.id === item.productId)?.name || 'Unknown Product',
+          image: products.find(p => p.id === item.productId)?.images?.[0] || ''
+        })),
+        total: orderTotals.total,
+        subtotal: orderTotals.subtotal,
+        shipping: orderTotals.shipping,
+        customer: {
+          name: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+          phone: stripPhoneFormatting(formData.phone),
+          address: {
+            line1: formData.address,
+            line2: formData.addressLine2,
+            city: formData.city,
+            state: formData.state,
+            postalCode: formData.postalCode,
+            country: formData.country
+          }
+        },
+        shippingAddress: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          addressLine1: formData.address,
+          addressLine2: formData.addressLine2,
+          city: formData.city,
+          state: formData.state,
+          postalCode: formData.postalCode,
+          country: formData.country,
+          phone: stripPhoneFormatting(formData.phone)
+        },
+        billingAddress: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          addressLine1: formData.address,
+          addressLine2: formData.addressLine2,
+          city: formData.city,
+          state: formData.state,
+          postalCode: formData.postalCode,
+          country: formData.country,
+          phone: stripPhoneFormatting(formData.phone)
+        }
+      };
+
       // Verify payment with timeout
-      const verificationResult = await verifyPayment(paymentResponse);
+      const verificationResult = await verifyPayment(paymentResponse, fullOrderData);
 
       toast.dismiss(verificationToast);
 
