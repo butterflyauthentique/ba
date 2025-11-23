@@ -3,7 +3,7 @@ import { loadScript } from './utils';
 
 // Razorpay configuration from environment variables
 // TEMPORARY: Force test key for debugging
-const keyId = process.env.NEXT_PUBLIC_RAZORPAY_TEST_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_YourTestKey";
+const keyId = "rzp_test_WijFS1A1GvHwP4";
 
 // Debug configuration in development
 if (typeof window !== 'undefined') {
