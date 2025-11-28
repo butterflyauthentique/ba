@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { 
-  Package, 
-  Upload, 
-  Save, 
+import {
+  Package,
+  Upload,
+  Save,
   ArrowLeft,
   X,
   Plus,
@@ -42,26 +42,32 @@ interface ProductForm {
   costPrice: string;
   sku: string;
   barcode: string;
-  
+
   // Categories & Organization
   category: string;
   subcategory: string;
   tags: string[];
   vendor: string;
   productType: string;
-  
+
   // Inventory & Shipping
   stock: string;
   lowStockThreshold: string;
   weight: string;
-  dimensions: string;
+  dimensions: {
+    length: string;
+    breadth: string;
+    height: string;
+  };
   shippingClass: string;
-  
+  hsn: string;
+  taxRate: string;
+
   // Media & Content
   images: string[];
   videos: string[];
   featuredImage: string;
-  
+
   // Variants
   variants: Array<{
     name: string;
@@ -72,21 +78,21 @@ interface ProductForm {
     weight: string;
     inStock: boolean;
   }>;
-  
+
   // Status & Settings
   isActive: boolean;
   isFeatured: boolean;
   requiresShipping: boolean;
   isTaxable: boolean;
-  
+
   // SEO
   slug: string;
   metaTitle: string;
   metaDescription: string;
-  
+
   // Product Badges
   badges: string[];
-  
+
   // Additional Details
   materials: string;
   artist: string;
@@ -96,7 +102,7 @@ interface ProductForm {
 
 const categories = [
   'Jewelry',
-  'Paintings', 
+  'Paintings',
   'Stoles',
   'Home Decor',
   'Accessories'
@@ -112,7 +118,7 @@ const subcategories = {
 
 const productBadges = [
   'Bestseller',
-  'New Arrival', 
+  'New Arrival',
   'Limited Edition',
   'Staff Pick',
   'Award Winning',
@@ -125,7 +131,7 @@ const productBadges = [
 
 const shippingClasses = [
   'Standard Shipping',
-  'Express Shipping', 
+  'Express Shipping',
   'Free Shipping',
   'Heavy Items',
   'Fragile Items'
@@ -156,8 +162,10 @@ export default function AddProductPage() {
     stock: '',
     lowStockThreshold: '',
     weight: '',
-    dimensions: '',
+    dimensions: { length: '', breadth: '', height: '' },
     shippingClass: '',
+    hsn: '',
+    taxRate: '',
     images: [],
     videos: [],
     featuredImage: '',
@@ -301,14 +309,14 @@ export default function AddProductPage() {
   const handleAddVariant = () => {
     setFormData(prev => ({
       ...prev,
-      variants: [...prev.variants, { 
-        name: '', 
-        price: '', 
-        comparePrice: '', 
-        sku: '', 
-        stock: '', 
-        weight: '', 
-        inStock: true 
+      variants: [...prev.variants, {
+        name: '',
+        price: '',
+        comparePrice: '',
+        sku: '',
+        stock: '',
+        weight: '',
+        inStock: true
       }]
     }));
   };
@@ -316,7 +324,7 @@ export default function AddProductPage() {
   const handleVariantChange = (index: number, field: string, value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
-      variants: prev.variants.map((variant, i) => 
+      variants: prev.variants.map((variant, i) =>
         i === index ? { ...variant, [field]: value } : variant
       )
     }));
@@ -332,7 +340,7 @@ export default function AddProductPage() {
   // Enhanced submit function with Firebase integration
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       toast.error('Please fix the validation errors');
       return;
@@ -343,7 +351,7 @@ export default function AddProductPage() {
     try {
       // Generate SKU if not provided
       const sku = formData.sku || `${formData.category.substring(0, 3).toUpperCase()}-${Date.now()}`;
-      
+
       // Generate slug if not provided
       const slug = formData.slug || formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
@@ -364,9 +372,15 @@ export default function AddProductPage() {
         productType: formData.productType,
         stock: parseInt(formData.stock) || 0,
         lowStockThreshold: parseInt(formData.lowStockThreshold) || 5,
-        weight: formData.weight,
-        dimensions: formData.dimensions,
+        weight: parseFloat(formData.weight) || 0,
+        dimensions: {
+          length: parseFloat(formData.dimensions.length) || 0,
+          breadth: parseFloat(formData.dimensions.breadth) || 0,
+          height: parseFloat(formData.dimensions.height) || 0
+        },
         shippingClass: formData.shippingClass,
+        hsn: formData.hsn,
+        taxRate: parseFloat(formData.taxRate) || 0,
         // Convert images array to proper structure
         images: formData.images.map((url, index) => ({
           id: `img-${Date.now()}-${index}`,
@@ -403,9 +417,9 @@ export default function AddProductPage() {
 
       // Save to Firebase
       const createdProduct = await productService.create(productData);
-      
+
       // Product created successfully in Firebase
-      
+
       toast.success('Product added successfully!');
       router.push('/admin/products');
     } catch (error) {
@@ -419,11 +433,11 @@ export default function AddProductPage() {
   // Save as draft function
   const handleSaveDraft = async () => {
     setIsSavingDraft(true);
-    
+
     try {
       // Generate SKU if not provided
       const sku = formData.sku || `${formData.category.substring(0, 3).toUpperCase()}-${Date.now()}`;
-      
+
       // Generate slug if not provided
       const slug = formData.slug || formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
@@ -444,9 +458,15 @@ export default function AddProductPage() {
         productType: formData.productType,
         stock: parseInt(formData.stock) || 0,
         lowStockThreshold: parseInt(formData.lowStockThreshold) || 5,
-        weight: formData.weight,
-        dimensions: formData.dimensions,
+        weight: parseFloat(formData.weight) || 0,
+        dimensions: {
+          length: parseFloat(formData.dimensions.length) || 0,
+          breadth: parseFloat(formData.dimensions.breadth) || 0,
+          height: parseFloat(formData.dimensions.height) || 0
+        },
         shippingClass: formData.shippingClass,
+        hsn: formData.hsn,
+        taxRate: parseFloat(formData.taxRate) || 0,
         images: formData.images.map((url, index) => ({
           id: `img-${Date.now()}-${index}`,
           url,
@@ -478,9 +498,9 @@ export default function AddProductPage() {
         purchaseCount: 0,
         status: 'draft' as const
       };
-      
+
       const createdProduct = await productService.create(productData);
-      
+
       // Product saved to Firebase successfully
       toast.success('Draft saved successfully!');
     } catch (error) {
@@ -494,7 +514,7 @@ export default function AddProductPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-    
+
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
@@ -514,7 +534,7 @@ export default function AddProductPage() {
   return (
     <div className="flex h-screen bg-gray-50">
       <AdminSidebar />
-      
+
       <div className="flex-1 lg:ml-64">
         <div className="p-6">
           {/* Header */}
@@ -522,7 +542,7 @@ export default function AddProductPage() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="flex items-center space-x-3 mb-2">
-                  <Link 
+                  <Link
                     href="/admin/products"
                     className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
                   >
@@ -537,7 +557,7 @@ export default function AddProductPage() {
                   Create a world-class product page following Shopify best practices
                 </p>
               </div>
-              
+
               {/* Action Buttons */}
               <div className="flex items-center space-x-3">
                 <button
@@ -571,7 +591,7 @@ export default function AddProductPage() {
           {/* Form */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200">
             {/* Tab Navigation */}
-            <div className="border-b border-gray-200">
+            <div className="sticky top-16 z-20 bg-white border-b border-gray-200 rounded-t-xl">
               <nav className="flex space-x-8 px-6 overflow-x-auto" aria-label="Tabs">
                 {tabs.map((tab) => {
                   const Icon = tab.icon;
@@ -600,7 +620,7 @@ export default function AddProductPage() {
               <div className="mb-4 p-2 bg-gray-100 rounded text-xs">
                 Active Tab: {activeTab} | Total Tabs: {tabs.length}
               </div>
-              
+
               {/* Basic Information Tab */}
               {activeTab === 'basic' && (
                 <div className="space-y-6">
@@ -619,9 +639,8 @@ export default function AddProductPage() {
                           name="name"
                           value={formData.name}
                           onChange={handleInputChange}
-                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
-                            validationErrors.name ? 'border-red-300' : 'border-gray-300'
-                          }`}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${validationErrors.name ? 'border-red-300' : 'border-gray-300'
+                            }`}
                           placeholder="e.g., Handcrafted Silver Necklace"
                           required
                         />
@@ -629,7 +648,7 @@ export default function AddProductPage() {
                           <p className="text-red-600 text-sm mt-1">{validationErrors.name}</p>
                         )}
                       </div>
-                      
+
                       <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Short Description *
@@ -639,9 +658,8 @@ export default function AddProductPage() {
                           value={formData.shortDescription}
                           onChange={handleInputChange}
                           rows={2}
-                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
-                            validationErrors.shortDescription ? 'border-red-300' : 'border-gray-300'
-                          }`}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${validationErrors.shortDescription ? 'border-red-300' : 'border-gray-300'
+                            }`}
                           placeholder="Brief description for product cards and search results"
                         />
                         {validationErrors.shortDescription && (
@@ -658,9 +676,8 @@ export default function AddProductPage() {
                           value={formData.description}
                           onChange={handleInputChange}
                           rows={6}
-                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
-                            validationErrors.description ? 'border-red-300' : 'border-gray-300'
-                          }`}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${validationErrors.description ? 'border-red-300' : 'border-gray-300'
+                            }`}
                           placeholder="Tell a story about your product. Include features, benefits, and what makes it special."
                         />
                         {validationErrors.description && (
@@ -676,9 +693,8 @@ export default function AddProductPage() {
                           name="category"
                           value={formData.category}
                           onChange={handleInputChange}
-                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
-                            validationErrors.category ? 'border-red-300' : 'border-gray-300'
-                          }`}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${validationErrors.category ? 'border-red-300' : 'border-gray-300'
+                            }`}
                           required
                         >
                           <option value="">Select category</option>
@@ -787,9 +803,8 @@ export default function AddProductPage() {
                           name="price"
                           value={formData.price}
                           onChange={handleInputChange}
-                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
-                            validationErrors.price ? 'border-red-300' : 'border-gray-300'
-                          }`}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${validationErrors.price ? 'border-red-300' : 'border-gray-300'
+                            }`}
                           placeholder="0.00"
                           min="0"
                           step="0.01"
@@ -802,51 +817,42 @@ export default function AddProductPage() {
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Compare Price (₹)
+                          Compare at Price (₹)
                         </label>
                         <input
                           type="number"
                           name="comparePrice"
                           value={formData.comparePrice}
                           onChange={handleInputChange}
-                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
-                            validationErrors.comparePrice ? 'border-red-300' : 'border-gray-300'
-                          }`}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                           placeholder="0.00"
                           min="0"
                           step="0.01"
                         />
-                        {validationErrors.comparePrice && (
-                          <p className="text-red-600 text-sm mt-1">{validationErrors.comparePrice}</p>
-                        )}
-                        <p className="text-xs text-gray-500 mt-1">Original price to show discount</p>
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Cost Price (₹)
+                          Cost per Item (₹)
                         </label>
                         <input
                           type="number"
                           name="costPrice"
                           value={formData.costPrice}
                           onChange={handleInputChange}
-                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
-                            validationErrors.costPrice ? 'border-red-300' : 'border-gray-300'
-                          }`}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                           placeholder="0.00"
                           min="0"
                           step="0.01"
                         />
-                        {validationErrors.costPrice && (
-                          <p className="text-red-600 text-sm mt-1">{validationErrors.costPrice}</p>
-                        )}
-                        <p className="text-xs text-gray-500 mt-1">For profit calculation</p>
+                        <p className="text-xs text-gray-500 mt-1">Customers won't see this</p>
                       </div>
+                    </div>
 
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          SKU
+                          SKU (Stock Keeping Unit)
                         </label>
                         <input
                           type="text"
@@ -854,13 +860,13 @@ export default function AddProductPage() {
                           value={formData.sku}
                           onChange={handleInputChange}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                          placeholder="Auto-generated if empty"
+                          placeholder="e.g., NK-SIL-001"
                         />
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Barcode
+                          Barcode (ISBN, UPC, GTIN, etc.)
                         </label>
                         <input
                           type="text"
@@ -868,10 +874,12 @@ export default function AddProductPage() {
                           value={formData.barcode}
                           onChange={handleInputChange}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                          placeholder="ISBN, UPC, etc."
+                          placeholder="e.g., 1234567890123"
                         />
                       </div>
+                    </div>
 
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Stock Quantity
@@ -881,9 +889,8 @@ export default function AddProductPage() {
                           name="stock"
                           value={formData.stock}
                           onChange={handleInputChange}
-                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
-                            validationErrors.stock ? 'border-red-300' : 'border-gray-300'
-                          }`}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${validationErrors.stock ? 'border-red-300' : 'border-gray-300'
+                            }`}
                           placeholder="0"
                           min="0"
                         />
@@ -906,272 +913,6 @@ export default function AddProductPage() {
                           min="0"
                         />
                       </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Weight (g)
-                        </label>
-                        <input
-                          type="text"
-                          name="weight"
-                          value={formData.weight}
-                          onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                          placeholder="e.g., 25g"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Dimensions
-                        </label>
-                        <input
-                          type="text"
-                          name="dimensions"
-                          value={formData.dimensions}
-                          onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                          placeholder="e.g., 10cm x 5cm x 2cm"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Media & Content Tab */}
-              {activeTab === 'media' && (
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                      <Upload className="h-5 w-5 mr-2" />
-                      Media & Content
-                    </h3>
-                    
-                    {/* Product Images */}
-                    <div className="mb-6">
-                      <h4 className="text-md font-medium text-gray-900 mb-3">Product Images *</h4>
-                      
-                      {validationErrors.images && (
-                        <p className="text-red-600 text-sm mb-2">{validationErrors.images}</p>
-                      )}
-                      
-                      <ImageUploader
-                        productId={formData.sku || 'temp'}
-                        category={formData.category || 'general'}
-                        userId={'admin'}
-                        onImagesUploaded={handleImagesUploaded}
-                        onImagesRemoved={handleImagesRemoved}
-                        maxImages={10}
-                        allowMultiple={true}
-                        showThumbnails={true}
-                        className="mb-4"
-                      />
-                    </div>
-
-                    {/* Product Videos */}
-                    <div className="mb-6">
-                      <h4 className="text-md font-medium text-gray-900 mb-3">Product Videos</h4>
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        <button
-                          type="button"
-                          onClick={handleAddVideo}
-                          className="flex items-center px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg hover:border-red-400 transition-colors"
-                        >
-                          <Plus className="h-5 w-5 mr-2 text-gray-400" />
-                          Add Video URL
-                        </button>
-                      </div>
-                      
-                      {formData.videos.length > 0 && (
-                        <div className="space-y-3">
-                          {formData.videos.map((video, index) => (
-                            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                              <span className="text-sm text-gray-700 truncate">{video}</span>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveVideo(index)}
-                                className="text-red-600 hover:text-red-700"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Additional Content */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Care Instructions
-                        </label>
-                        <textarea
-                          name="careInstructions"
-                          value={formData.careInstructions}
-                          onChange={handleInputChange}
-                          rows={3}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                          placeholder="How to care for this product..."
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Warranty Information
-                        </label>
-                        <textarea
-                          name="warranty"
-                          value={formData.warranty}
-                          onChange={handleInputChange}
-                          rows={3}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                          placeholder="Warranty details..."
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Variants Tab */}
-              {activeTab === 'variants' && (
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                      <Tag className="h-5 w-5 mr-2" />
-                      Product Variants
-                    </h3>
-                    <div className="space-y-4">
-                      <button
-                        type="button"
-                        onClick={handleAddVariant}
-                        className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Variant
-                      </button>
-                      
-                      {formData.variants.map((variant, index) => (
-                        <div key={index} className="border border-gray-200 rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-4">
-                            <h4 className="font-medium">Variant {index + 1}</h4>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveVariant(index)}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Variant Name
-                              </label>
-                              <input
-                                type="text"
-                                value={variant.name}
-                                onChange={(e) => handleVariantChange(index, 'name', e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                                placeholder="e.g., Red, Large"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Price (₹)
-                              </label>
-                              <input
-                                type="number"
-                                value={variant.price}
-                                onChange={(e) => handleVariantChange(index, 'price', e.target.value)}
-                                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
-                                  validationErrors[`variant-price-${index}`] ? 'border-red-300' : 'border-gray-300'
-                                }`}
-                                placeholder="0.00"
-                                min="0"
-                                step="0.01"
-                              />
-                              {validationErrors[`variant-price-${index}`] && (
-                                <p className="text-red-600 text-sm mt-1">{validationErrors[`variant-price-${index}`]}</p>
-                              )}
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Compare Price (₹)
-                              </label>
-                              <input
-                                type="number"
-                                value={variant.comparePrice}
-                                onChange={(e) => handleVariantChange(index, 'comparePrice', e.target.value)}
-                                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
-                                  validationErrors[`variant-comparePrice-${index}`] ? 'border-red-300' : 'border-gray-300'
-                                }`}
-                                placeholder="0.00"
-                                min="0"
-                                step="0.01"
-                              />
-                              {validationErrors[`variant-comparePrice-${index}`] && (
-                                <p className="text-red-600 text-sm mt-1">{validationErrors[`variant-comparePrice-${index}`]}</p>
-                              )}
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                SKU
-                              </label>
-                              <input
-                                type="text"
-                                value={variant.sku}
-                                onChange={(e) => handleVariantChange(index, 'sku', e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                                placeholder="Variant SKU"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Stock
-                              </label>
-                              <input
-                                type="number"
-                                value={variant.stock}
-                                onChange={(e) => handleVariantChange(index, 'stock', e.target.value)}
-                                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
-                                  validationErrors[`variant-stock-${index}`] ? 'border-red-300' : 'border-gray-300'
-                                }`}
-                                placeholder="0"
-                                min="0"
-                              />
-                              {validationErrors[`variant-stock-${index}`] && (
-                                <p className="text-red-600 text-sm mt-1">{validationErrors[`variant-stock-${index}`]}</p>
-                              )}
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Weight (g)
-                              </label>
-                              <input
-                                type="text"
-                                value={variant.weight}
-                                onChange={(e) => handleVariantChange(index, 'weight', e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                                placeholder="e.g., 25g"
-                              />
-                            </div>
-                            <div className="flex items-center">
-                              <input
-                                type="checkbox"
-                                checked={variant.inStock}
-                                onChange={(e) => handleVariantChange(index, 'inStock', e.target.checked)}
-                                className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
-                              />
-                              <label className="ml-2 text-sm text-gray-700">
-                                In Stock
-                              </label>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
                     </div>
                   </div>
                 </div>
@@ -1185,231 +926,608 @@ export default function AddProductPage() {
                       <Truck className="h-5 w-5 mr-2" />
                       Shipping & Tax
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Shipping Class
-                        </label>
-                        <select
-                          name="shippingClass"
-                          value={formData.shippingClass}
-                          onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                        >
-                          <option value="">Select shipping class</option>
-                          {shippingClasses.map(shippingClass => (
-                            <option key={shippingClass} value={shippingClass}>{shippingClass}</option>
-                          ))}
-                        </select>
-                      </div>
 
-                      <div className="space-y-4">
-                        <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            name="requiresShipping"
-                            checked={formData.requiresShipping}
-                            onChange={handleInputChange}
-                            className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
-                          />
-                          <label className="ml-2 text-sm text-gray-700">
-                            Requires shipping
+                    <div className="flex items-center space-x-4 mb-6">
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          name="requiresShipping"
+                          checked={formData.requiresShipping}
+                          onChange={handleInputChange}
+                          className="rounded text-red-600 focus:ring-red-500"
+                        />
+                        <span className="text-sm font-medium text-gray-700">This is a physical product</span>
+                      </label>
+
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          name="isTaxable"
+                          checked={formData.isTaxable}
+                          onChange={handleInputChange}
+                          className="rounded text-red-600 focus:ring-red-500"
+                        />
+                        <span className="text-sm font-medium text-gray-700">Charge tax on this product</span>
+                      </label>
+                    </div>
+
+                    {formData.requiresShipping && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Weight (kg)
                           </label>
+                          <input
+                            type="number"
+                            name="weight"
+                            value={formData.weight}
+                            onChange={handleInputChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                            placeholder="0.5"
+                            step="0.01"
+                            min="0"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">Used to calculate shipping rates</p>
                         </div>
-                        
-                        <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            name="isTaxable"
-                            checked={formData.isTaxable}
-                            onChange={handleInputChange}
-                            className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
-                          />
-                          <label className="ml-2 text-sm text-gray-700">
-                            Taxable
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Dimensions (L x B x H) cm
                           </label>
+                          <div className="grid grid-cols-3 gap-2">
+                            <input
+                              type="number"
+                              placeholder="L"
+                              value={formData.dimensions.length}
+                              onChange={(e) => setFormData(prev => ({
+                                ...prev,
+                                dimensions: { ...prev.dimensions, length: e.target.value }
+                              }))}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                            />
+                            <input
+                              type="number"
+                              placeholder="B"
+                              value={formData.dimensions.breadth}
+                              onChange={(e) => setFormData(prev => ({
+                                ...prev,
+                                dimensions: { ...prev.dimensions, breadth: e.target.value }
+                              }))}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                            />
+                            <input
+                              type="number"
+                              placeholder="H"
+                              value={formData.dimensions.height}
+                              onChange={(e) => setFormData(prev => ({
+                                ...prev,
+                                dimensions: { ...prev.dimensions, height: e.target.value }
+                              }))}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                            />
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    )}
+
+                    {formData.isTaxable && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            HSN Code
+                          </label>
+                          <input
+                            type="text"
+                            name="hsn"
+                            value={formData.hsn}
+                            onChange={handleInputChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                            placeholder="e.g., 7113"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">Harmonized System Nomenclature code for GST</p>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Tax Rate (%)
+                          </label>
+                          <input
+                            type="number"
+                            name="taxRate"
+                            value={formData.taxRate}
+                            onChange={handleInputChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                            placeholder="e.g., 18"
+                            min="0"
+                            step="0.1"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
 
-              {/* SEO & Marketing Tab */}
-              {activeTab === 'seo' && (
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                      <Eye className="h-5 w-5 mr-2" />
-                      SEO & Marketing
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          URL Slug
-                        </label>
-                        <input
-                          type="text"
-                          name="slug"
-                          value={formData.slug}
-                          onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                          placeholder="Auto-generated from product name"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">URL-friendly version of product name</p>
-                      </div>
+              {/* Media & Content Tab */}
+              {
+                activeTab === 'media' && (
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <Upload className="h-5 w-5 mr-2" />
+                        Media & Content
+                      </h3>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Meta Title
-                        </label>
-                        <input
-                          type="text"
-                          name="metaTitle"
-                          value={formData.metaTitle}
-                          onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                          placeholder="SEO title for search engines"
+                      {/* Product Images */}
+                      <div className="mb-6">
+                        <h4 className="text-md font-medium text-gray-900 mb-3">Product Images *</h4>
+
+                        {validationErrors.images && (
+                          <p className="text-red-600 text-sm mb-2">{validationErrors.images}</p>
+                        )}
+
+                        <ImageUploader
+                          productId={formData.sku || 'temp'}
+                          category={formData.category || 'general'}
+                          userId={'admin'}
+                          onImagesUploaded={handleImagesUploaded}
+                          onImagesRemoved={handleImagesRemoved}
+                          maxImages={10}
+                          allowMultiple={true}
+                          showThumbnails={true}
+                          className="mb-4"
                         />
                       </div>
 
-                      <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Meta Description
-                        </label>
-                        <textarea
-                          name="metaDescription"
-                          value={formData.metaDescription}
-                          onChange={handleInputChange}
-                          rows={3}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                          placeholder="SEO description for search engines (150-160 characters)"
-                        />
-                      </div>
-
-                      <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Product Tags
-                        </label>
-                        <div className="flex flex-wrap gap-2 mb-2">
-                          {formData.tags.map((tag, index) => (
-                            <span
-                              key={index}
-                              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800"
-                            >
-                              {tag}
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveTag(tag)}
-                                className="ml-1 text-red-600 hover:text-red-800"
-                              >
-                                <X className="h-3 w-3" />
-                              </button>
-                            </span>
-                          ))}
+                      {/* Product Videos */}
+                      <div className="mb-6">
+                        <h4 className="text-md font-medium text-gray-900 mb-3">Product Videos</h4>
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          <button
+                            type="button"
+                            onClick={handleAddVideo}
+                            className="flex items-center px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg hover:border-red-400 transition-colors"
+                          >
+                            <Plus className="h-5 w-5 mr-2 text-gray-400" />
+                            Add Video URL
+                          </button>
                         </div>
+
+                        {formData.videos.length > 0 && (
+                          <div className="space-y-3">
+                            {formData.videos.map((video, index) => (
+                              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <span className="text-sm text-gray-700 truncate">{video}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveVideo(index)}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Additional Content */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Care Instructions
+                          </label>
+                          <textarea
+                            name="careInstructions"
+                            value={formData.careInstructions}
+                            onChange={handleInputChange}
+                            rows={3}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                            placeholder="How to care for this product..."
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Warranty Information
+                          </label>
+                          <textarea
+                            name="warranty"
+                            value={formData.warranty}
+                            onChange={handleInputChange}
+                            rows={3}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                            placeholder="Warranty details..."
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              }
+
+              {/* Variants Tab */}
+              {
+                activeTab === 'variants' && (
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <Tag className="h-5 w-5 mr-2" />
+                        Product Variants
+                      </h3>
+                      <div className="space-y-4">
                         <button
                           type="button"
-                          onClick={handleAddTag}
-                          className="flex items-center px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                          onClick={handleAddVariant}
+                          className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                         >
                           <Plus className="h-4 w-4 mr-2" />
-                          Add Tag
+                          Add Variant
                         </button>
+
+                        {formData.variants.map((variant, index) => (
+                          <div key={index} className="border border-gray-200 rounded-lg p-4">
+                            <div className="flex items-center justify-between mb-4">
+                              <h4 className="font-medium">Variant {index + 1}</h4>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveVariant(index)}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  Variant Name
+                                </label>
+                                <input
+                                  type="text"
+                                  value={variant.name}
+                                  onChange={(e) => handleVariantChange(index, 'name', e.target.value)}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                                  placeholder="e.g., Red, Large"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  Price (₹)
+                                </label>
+                                <input
+                                  type="number"
+                                  value={variant.price}
+                                  onChange={(e) => handleVariantChange(index, 'price', e.target.value)}
+                                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${validationErrors[`variant-price-${index}`] ? 'border-red-300' : 'border-gray-300'
+                                    }`}
+                                  placeholder="0.00"
+                                  min="0"
+                                  step="0.01"
+                                />
+                                {validationErrors[`variant-price-${index}`] && (
+                                  <p className="text-red-600 text-sm mt-1">{validationErrors[`variant-price-${index}`]}</p>
+                                )}
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  Compare Price (₹)
+                                </label>
+                                <input
+                                  type="number"
+                                  value={variant.comparePrice}
+                                  onChange={(e) => handleVariantChange(index, 'comparePrice', e.target.value)}
+                                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${validationErrors[`variant-comparePrice-${index}`] ? 'border-red-300' : 'border-gray-300'
+                                    }`}
+                                  placeholder="0.00"
+                                  min="0"
+                                  step="0.01"
+                                />
+                                {validationErrors[`variant-comparePrice-${index}`] && (
+                                  <p className="text-red-600 text-sm mt-1">{validationErrors[`variant-comparePrice-${index}`]}</p>
+                                )}
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  SKU
+                                </label>
+                                <input
+                                  type="text"
+                                  value={variant.sku}
+                                  onChange={(e) => handleVariantChange(index, 'sku', e.target.value)}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                                  placeholder="Variant SKU"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  Stock
+                                </label>
+                                <input
+                                  type="number"
+                                  value={variant.stock}
+                                  onChange={(e) => handleVariantChange(index, 'stock', e.target.value)}
+                                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${validationErrors[`variant-stock-${index}`] ? 'border-red-300' : 'border-gray-300'
+                                    }`}
+                                  placeholder="0"
+                                  min="0"
+                                />
+                                {validationErrors[`variant-stock-${index}`] && (
+                                  <p className="text-red-600 text-sm mt-1">{validationErrors[`variant-stock-${index}`]}</p>
+                                )}
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  Weight (g)
+                                </label>
+                                <input
+                                  type="text"
+                                  value={variant.weight}
+                                  onChange={(e) => handleVariantChange(index, 'weight', e.target.value)}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                                  placeholder="e.g., 25g"
+                                />
+                              </div>
+                              <div className="flex items-center">
+                                <input
+                                  type="checkbox"
+                                  checked={variant.inStock}
+                                  onChange={(e) => handleVariantChange(index, 'inStock', e.target.checked)}
+                                  className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                                />
+                                <label className="ml-2 text-sm text-gray-700">
+                                  In Stock
+                                </label>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )
+              }
 
-              {/* Product Badges Tab */}
-              {activeTab === 'badges' && (
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                      <Award className="h-5 w-5 mr-2" />
-                      Product Badges
-                    </h3>
-                    <p className="text-gray-600 mb-4">
-                      Add badges to make your product stand out and grab shopper attention.
-                    </p>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {productBadges.map((badge) => (
-                        <button
-                          key={badge}
-                          type="button"
-                          onClick={() => handleToggleBadge(badge)}
-                          className={`
-                            p-3 rounded-lg border-2 text-left transition-colors
-                            ${formData.badges.includes(badge)
-                              ? 'border-red-500 bg-red-50 text-red-700'
-                              : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
-                            }
-                          `}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="font-medium">{badge}</span>
-                            {formData.badges.includes(badge) && (
-                              <CheckCircle className="h-5 w-5 text-red-600" />
-                            )}
+              {/* Shipping & Tax Tab */}
+              {
+                activeTab === 'shipping' && (
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <Truck className="h-5 w-5 mr-2" />
+                        Shipping & Tax
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Shipping Class
+                          </label>
+                          <select
+                            name="shippingClass"
+                            value={formData.shippingClass}
+                            onChange={handleInputChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                          >
+                            <option value="">Select shipping class</option>
+                            {shippingClasses.map(shippingClass => (
+                              <option key={shippingClass} value={shippingClass}>{shippingClass}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div className="flex items-center">
+                            <input
+                              type="checkbox"
+                              name="requiresShipping"
+                              checked={formData.requiresShipping}
+                              onChange={handleInputChange}
+                              className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                            />
+                            <label className="ml-2 text-sm text-gray-700">
+                              Requires shipping
+                            </label>
                           </div>
-                        </button>
-                      ))}
+
+                          <div className="flex items-center">
+                            <input
+                              type="checkbox"
+                              name="isTaxable"
+                              checked={formData.isTaxable}
+                              onChange={handleInputChange}
+                              className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                            />
+                            <label className="ml-2 text-sm text-gray-700">
+                              Taxable
+                            </label>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )
+              }
+
+              {/* SEO & Marketing Tab */}
+              {
+                activeTab === 'seo' && (
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <Eye className="h-5 w-5 mr-2" />
+                        SEO & Marketing
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            URL Slug
+                          </label>
+                          <input
+                            type="text"
+                            name="slug"
+                            value={formData.slug}
+                            onChange={handleInputChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                            placeholder="Auto-generated from product name"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">URL-friendly version of product name</p>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Meta Title
+                          </label>
+                          <input
+                            type="text"
+                            name="metaTitle"
+                            value={formData.metaTitle}
+                            onChange={handleInputChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                            placeholder="SEO title for search engines"
+                          />
+                        </div>
+
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Meta Description
+                          </label>
+                          <textarea
+                            name="metaDescription"
+                            value={formData.metaDescription}
+                            onChange={handleInputChange}
+                            rows={3}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                            placeholder="SEO description for search engines (150-160 characters)"
+                          />
+                        </div>
+
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Product Tags
+                          </label>
+                          <div className="flex flex-wrap gap-2 mb-2">
+                            {formData.tags.map((tag, index) => (
+                              <span
+                                key={index}
+                                className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800"
+                              >
+                                {tag}
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveTag(tag)}
+                                  className="ml-1 text-red-600 hover:text-red-800"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleAddTag}
+                            className="flex items-center px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Tag
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              }
+
+              {/* Product Badges Tab */}
+              {
+                activeTab === 'badges' && (
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <Award className="h-5 w-5 mr-2" />
+                        Product Badges
+                      </h3>
+                      <p className="text-gray-600 mb-4">
+                        Add badges to make your product stand out and grab shopper attention.
+                      </p>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {productBadges.map((badge) => (
+                          <button
+                            key={badge}
+                            type="button"
+                            onClick={() => handleToggleBadge(badge)}
+                            className={`
+                            p-3 rounded-lg border-2 text-left transition-colors
+                            ${formData.badges.includes(badge)
+                                ? 'border-red-500 bg-red-50 text-red-700'
+                                : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                              }
+                          `}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-medium">{badge}</span>
+                              {formData.badges.includes(badge) && (
+                                <CheckCircle className="h-5 w-5 text-red-600" />
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )
+              }
 
               {/* Fallback - Show all tabs if none are active */}
-              {!['basic', 'pricing', 'media', 'variants', 'shipping', 'seo', 'badges'].includes(activeTab) && (
-                <div className="space-y-6">
-                  <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p className="text-yellow-800">Tab "{activeTab}" not found. Showing all tabs:</p>
-                  </div>
-                  
-                  {/* Basic Information Tab */}
+              {
+                !['basic', 'pricing', 'media', 'variants', 'shipping', 'seo', 'badges'].includes(activeTab) && (
                   <div className="space-y-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
-                    <p className="text-gray-600">Basic information tab content would go here.</p>
+                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-yellow-800">Tab "{activeTab}" not found. Showing all tabs:</p>
+                    </div>
+
+                    {/* Basic Information Tab */}
+                    <div className="space-y-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
+                      <p className="text-gray-600">Basic information tab content would go here.</p>
+                    </div>
+
+                    {/* Pricing & Inventory Tab */}
+                    <div className="space-y-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Pricing & Inventory</h3>
+                      <p className="text-gray-600">Pricing and inventory tab content would go here.</p>
+                    </div>
+
+                    {/* Media & Content Tab */}
+                    <div className="space-y-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Media & Content</h3>
+                      <p className="text-gray-600">Media and content tab content would go here.</p>
+                    </div>
+
+                    {/* Variants Tab */}
+                    <div className="space-y-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Variants</h3>
+                      <p className="text-gray-600">Product variants tab content would go here.</p>
+                    </div>
+
+                    {/* Shipping & Tax Tab */}
+                    <div className="space-y-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Shipping & Tax</h3>
+                      <p className="text-gray-600">Shipping and tax tab content would go here.</p>
+                    </div>
+
+                    {/* SEO & Marketing Tab */}
+                    <div className="space-y-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">SEO & Marketing</h3>
+                      <p className="text-gray-600">SEO and marketing tab content would go here.</p>
+                    </div>
+
+                    {/* Product Badges Tab */}
+                    <div className="space-y-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Badges</h3>
+                      <p className="text-gray-600">Product badges tab content would go here.</p>
+                    </div>
                   </div>
-                  
-                  {/* Pricing & Inventory Tab */}
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Pricing & Inventory</h3>
-                    <p className="text-gray-600">Pricing and inventory tab content would go here.</p>
-                  </div>
-                  
-                  {/* Media & Content Tab */}
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Media & Content</h3>
-                    <p className="text-gray-600">Media and content tab content would go here.</p>
-                  </div>
-                  
-                  {/* Variants Tab */}
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Variants</h3>
-                    <p className="text-gray-600">Product variants tab content would go here.</p>
-                  </div>
-                  
-                  {/* Shipping & Tax Tab */}
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Shipping & Tax</h3>
-                    <p className="text-gray-600">Shipping and tax tab content would go here.</p>
-                  </div>
-                  
-                  {/* SEO & Marketing Tab */}
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">SEO & Marketing</h3>
-                    <p className="text-gray-600">SEO and marketing tab content would go here.</p>
-                  </div>
-                  
-                  {/* Product Badges Tab */}
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Badges</h3>
-                    <p className="text-gray-600">Product badges tab content would go here.</p>
-                  </div>
-                </div>
-              )}
+                )
+              }
 
               {/* Submit Buttons */}
               <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">
@@ -1428,10 +1546,10 @@ export default function AddProductPage() {
                   {isLoading ? 'Saving...' : 'Save Product'}
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
+            </form >
+          </div >
+        </div >
+      </div >
+    </div >
   );
 } 

@@ -87,7 +87,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+
         <link rel="alternate" type="application/rss+xml" title="Butterfly Authentique Journal" href="/blog/rss.xml" />
         {/* Organization Schema */}
         <script
@@ -110,7 +110,7 @@ export default function RootLayout({
             </main>
             <Footer />
           </div>
-          <Toaster 
+          <Toaster
             position="top-right"
             toastOptions={{
               duration: 4000,

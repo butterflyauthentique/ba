@@ -79,6 +79,8 @@ export async function authenticateShiprocket(): Promise<string> {
         throw new Error('Shiprocket credentials not configured. Please set SHIPROCKET_EMAIL and SHIPROCKET_PASSWORD environment variables.');
     }
 
+    console.log(`🔐 Authenticating with Shiprocket as: ${config.email.substring(0, 3)}***@${config.email.split('@')[1]}`);
+
     try {
         const response = await fetch(`${SHIPROCKET_BASE_URL}/auth/login`, {
             method: 'POST',

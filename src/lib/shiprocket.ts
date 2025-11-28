@@ -168,14 +168,51 @@ export interface ShiprocketOrderResponse {
 export function convertToShiprocketOrder(order: Order): ShiprocketOrderPayload {
     const pickupLocation = process.env.SHIPROCKET_PICKUP_LOCATION || 'Primary';
 
-    // Calculate total weight (default 0.5kg if not specified)
-    const defaultWeight = parseFloat(process.env.SHIPROCKET_DEFAULT_WEIGHT || '0.5');
-    const totalWeight = order.items.length * defaultWeight;
+    // Calculate total weight and dimensions
+    let totalWeight = 0;
+    let totalLength = 0;
+    let totalBreadth = 0;
+    let maxHeight = 0;
 
-    // Default dimensions (in cm)
+    // Default values if not present
+    const defaultWeight = parseFloat(process.env.SHIPROCKET_DEFAULT_WEIGHT || '0.5');
     const defaultLength = 20;
     const defaultBreadth = 15;
     const defaultHeight = 10;
+
+    order.items.forEach(item => {
+        const itemWeight = item.weight || defaultWeight;
+        const itemQuantity = item.quantity;
+        totalWeight += itemWeight * itemQuantity;
+
+        // Simple dimension calculation: Stack items by height, take max length/breadth
+        // This is a simplification; for better packing logic, a bin packing algorithm is needed
+        // But for now, this ensures we cover the volume
+        const itemDims = item.dimensions || { length: defaultLength, breadth: defaultBreadth, height: defaultHeight };
+
+        // We'll assume we pack them side-by-side or stacked. 
+        // Let's take the max of length and breadth, and sum the heights? 
+        // Or just sum the volumes and estimate?
+        // Let's go with a safe approximation: Max Length, Max Breadth, Sum of Heights (stacking)
+        // This might result in large heights, but it's safer than underestimating.
+        // Actually, for shipping, volumetric weight is key.
+        // Let's stick to the defaults if no dimensions are provided, otherwise use the item's dimensions.
+        // If multiple items, we'll just take the max dimensions of a single item and maybe increase height?
+        // Let's use a simpler approach: 
+        // Length = Max(Item Lengths)
+        // Breadth = Max(Item Breadths)
+        // Height = Sum(Item Heights)
+
+        totalLength = Math.max(totalLength, itemDims.length);
+        totalBreadth = Math.max(totalBreadth, itemDims.breadth);
+        maxHeight += itemDims.height * itemQuantity;
+    });
+
+    // Ensure minimums
+    totalLength = totalLength || defaultLength;
+    totalBreadth = totalBreadth || defaultBreadth;
+    maxHeight = maxHeight || defaultHeight;
+    totalWeight = totalWeight || defaultWeight;
 
     // Split customer name
     const nameParts = order.customer.name.split(' ');
@@ -190,7 +227,7 @@ export function convertToShiprocketOrder(order: Order): ShiprocketOrderPayload {
         order_id: order.orderNumber,
         order_date: order.createdAt.toDate().toISOString().split('T')[0], // YYYY-MM-DD
         pickup_location: pickupLocation,
-        channel_id: '',
+        channel_id: process.env.SHIPROCKET_CHANNEL_ID || '9005923',
         comment: order.customerNotes || '',
 
         // Billing address
@@ -225,7 +262,11 @@ export function convertToShiprocketOrder(order: Order): ShiprocketOrderPayload {
             units: item.quantity,
             selling_price: item.price,
             discount: 0,
-            tax: 0, // GST already included in price
+            tax: item.taxRate || 0,
+            hsn: item.hsn ? parseInt(item.hsn.replace(/\D/g, '')) : undefined, // Shiprocket expects integer HSN? API docs say string or int? 
+            // Docs say `hsn` (Optional) : Harmonized System Nomenclature (HSN) code.
+            // Let's check the type in `ShiprocketOrderPayload` interface. It says `hsn?: number;`.
+            // So we must parse it.
         })),
 
         // Payment
@@ -239,9 +280,9 @@ export function convertToShiprocketOrder(order: Order): ShiprocketOrderPayload {
         sub_total: order.subtotal,
 
         // Dimensions and weight
-        length: defaultLength,
-        breadth: defaultBreadth,
-        height: defaultHeight,
+        length: totalLength,
+        breadth: totalBreadth,
+        height: maxHeight,
         weight: totalWeight,
     };
 

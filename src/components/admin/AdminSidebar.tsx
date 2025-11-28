@@ -5,13 +5,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
 import { DEFAULT_ADMIN_EMAIL } from '@/lib/adminAuth';
-import { 
-  LayoutDashboard, 
-  Package, 
-  ShoppingCart, 
-  Users, 
-  BarChart3, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  Users,
+  BarChart3,
+  Settings,
   LogOut,
   Menu,
   X,
@@ -128,7 +128,7 @@ export default function AdminSidebar() {
               if (item.name === 'Admins' && !isDefaultAdmin) {
                 return null;
               }
-              
+
               const isActive = pathname === item.href;
               return (
                 <Link
@@ -136,8 +136,8 @@ export default function AdminSidebar() {
                   href={item.href}
                   className={`
                     flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors group
-                    ${isActive 
-                      ? 'bg-red-50 text-red-700 border-r-2 border-red-600' 
+                    ${isActive
+                      ? 'bg-red-50 text-red-700 border-r-2 border-red-600'
                       : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                     }
                   `}
@@ -154,7 +154,7 @@ export default function AdminSidebar() {
           </nav>
 
           {/* Footer */}
-          <div className="p-4 border-t border-gray-200 space-y-2">
+          <div className="mt-auto p-4 border-t border-gray-200 space-y-2">
             {/* Back to Main Site */}
             <Link
               href="/"
@@ -179,7 +179,7 @@ export default function AdminSidebar() {
 
       {/* Mobile overlay */}
       {isMobileMenuOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
           onClick={() => setIsMobileMenuOpen(false)}
         />

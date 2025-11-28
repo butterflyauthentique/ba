@@ -104,9 +104,15 @@ export interface Product {
   isFeatured: boolean;
 
   // Physical Properties
-  weight?: string;
-  dimensions?: string;
+  weight?: number; // in kg
+  dimensions?: {
+    length: number;
+    breadth: number;
+    height: number;
+  };
   shippingClass?: string;
+  hsn?: string;
+  taxRate?: number; // percentage, e.g., 18 for 18%
 
   // Images
   images: {
@@ -123,6 +129,7 @@ export interface Product {
     price: number;
     stock: number;
     sku: string;
+    weight?: number;
   }[];
 
   // Shipping & Tax
@@ -243,6 +250,14 @@ export interface OrderItem {
   price: number;
   quantity: number;
   total: number;
+  taxRate?: number;
+  hsn?: string;
+  weight?: number; // in kg
+  dimensions?: {
+    length: number;
+    breadth: number;
+    height: number;
+  };
 
   // Variants
   variantId?: string;

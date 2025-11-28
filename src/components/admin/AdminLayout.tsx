@@ -30,7 +30,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       try {
         const adminStatus = await isAdmin(user);
         setIsUserAdmin(adminStatus);
-        
+
         if (!adminStatus) {
           toast.error('You do not have permission to access the admin panel');
           router.push('/');
@@ -70,11 +70,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
       <AdminSidebar />
-      
+
       {/* Main Content - with proper left margin for sidebar */}
       <div className="lg:ml-64">
         {/* Header */}
-        <header className="bg-white shadow-sm border-b border-gray-200">
+        <header className="sticky top-0 z-30 bg-white shadow-sm border-b border-gray-200">
           <div className="px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div>
@@ -85,7 +85,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   Welcome back, {user?.name}
                 </p>
               </div>
-              
+
               <div className="flex items-center space-x-4">
                 <span className="text-sm text-gray-500">
                   {user?.email}

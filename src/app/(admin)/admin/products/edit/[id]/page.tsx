@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { 
-  Package, 
-  Upload, 
-  Save, 
+import {
+  Package,
+  Upload,
+  Save,
   ArrowLeft,
   X,
   Plus,
@@ -42,26 +42,32 @@ interface ProductForm {
   costPrice: string;
   sku: string;
   barcode: string;
-  
+
   // Categories & Organization
   category: string;
   subcategory: string;
   tags: string[];
   vendor: string;
   productType: string;
-  
+
   // Inventory & Shipping
   stock: string;
   lowStockThreshold: string;
   weight: string;
-  dimensions: string;
+  dimensions: {
+    length: string;
+    breadth: string;
+    height: string;
+  };
   shippingClass: string;
-  
+  hsn: string;
+  taxRate: string;
+
   // Media & Content
   images: string[];
   videos: string[];
   featuredImage: string;
-  
+
   // Variants
   variants: Array<{
     name: string;
@@ -72,21 +78,21 @@ interface ProductForm {
     weight: string;
     inStock: boolean;
   }>;
-  
+
   // Status & Settings
   isActive: boolean;
   isFeatured: boolean;
   requiresShipping: boolean;
   isTaxable: boolean;
-  
+
   // SEO
   slug: string;
   metaTitle: string;
   metaDescription: string;
-  
+
   // Product Badges
   badges: string[];
-  
+
   // Additional Details
   materials: string;
   artist: string;
@@ -96,7 +102,7 @@ interface ProductForm {
 
 const categories = [
   'Jewelry',
-  'Paintings', 
+  'Paintings',
   'Stoles',
   'Home Decor',
   'Accessories'
@@ -112,7 +118,7 @@ const subcategories = {
 
 const productBadges = [
   'Bestseller',
-  'New Arrival', 
+  'New Arrival',
   'Limited Edition',
   'Staff Pick',
   'Award Winning',
@@ -125,7 +131,7 @@ const productBadges = [
 
 const shippingClasses = [
   'Standard Shipping',
-  'Express Shipping', 
+  'Express Shipping',
   'Free Shipping',
   'Heavy Items',
   'Fragile Items'
@@ -158,8 +164,14 @@ export default function EditProductPage() {
     stock: '',
     lowStockThreshold: '',
     weight: '',
-    dimensions: '',
+    dimensions: {
+      length: '',
+      breadth: '',
+      height: ''
+    },
     shippingClass: '',
+    hsn: '',
+    taxRate: '',
     images: [],
     videos: [],
     featuredImage: '',
@@ -188,51 +200,61 @@ export default function EditProductPage() {
         try {
           const existingProduct = await productService.getById(productId);
           if (existingProduct) {
-        setFormData({
-          name: existingProduct.name || '',
-          description: existingProduct.description || '',
-          shortDescription: existingProduct.shortDescription || '',
-          price: existingProduct.price?.toString() || '',
-          comparePrice: existingProduct.comparePrice?.toString() || '',
-          costPrice: existingProduct.costPrice?.toString() || '',
-          sku: existingProduct.sku || '',
-          barcode: existingProduct.barcode || '',
-          category: existingProduct.category || '',
-          subcategory: existingProduct.subcategory || '',
-          tags: existingProduct.tags || [],
-          vendor: existingProduct.vendor || '',
-          productType: existingProduct.productType || '',
-          stock: existingProduct.stock?.toString() || '',
-          lowStockThreshold: existingProduct.lowStockThreshold?.toString() || '',
-          weight: existingProduct.weight || '',
-          dimensions: existingProduct.dimensions || '',
-          shippingClass: existingProduct.shippingClass || '',
-          images: existingProduct.images?.map(img => typeof img === 'string' ? img : img.url) || [],
-          videos: [], // Videos not supported in current Product interface
-          featuredImage: '', // featuredImage not in current Product interface
-          variants: existingProduct.variants?.map(v => ({
-            name: v.name,
-            price: v.price?.toString() || '',
-            comparePrice: '', // comparePrice not in current variant interface
-            sku: v.sku || '',
-            stock: v.stock?.toString() || '',
-            weight: '', // weight not in current variant interface
-            inStock: v.stock > 0
-          })) || [],
-          isActive: existingProduct.isActive ?? true,
-          isFeatured: existingProduct.isFeatured ?? false,
-          requiresShipping: existingProduct.requiresShipping ?? true,
-          isTaxable: existingProduct.isTaxable ?? true,
-          slug: existingProduct.slug || '',
-          metaTitle: existingProduct.metaTitle || '',
-          metaDescription: existingProduct.metaDescription || '',
-          badges: existingProduct.badges || [],
-          materials: existingProduct.materials || '',
-          artist: existingProduct.artist || '',
-          careInstructions: existingProduct.careInstructions || '',
-          warranty: existingProduct.warranty || ''
-        });
-                } else {
+            setFormData({
+              name: existingProduct.name || '',
+              description: existingProduct.description || '',
+              shortDescription: existingProduct.shortDescription || '',
+              price: existingProduct.price?.toString() || '',
+              comparePrice: existingProduct.comparePrice?.toString() || '',
+              costPrice: existingProduct.costPrice?.toString() || '',
+              sku: existingProduct.sku || '',
+              barcode: existingProduct.barcode || '',
+              category: existingProduct.category || '',
+              subcategory: existingProduct.subcategory || '',
+              tags: existingProduct.tags || [],
+              vendor: existingProduct.vendor || '',
+              productType: existingProduct.productType || '',
+              stock: existingProduct.stock?.toString() || '',
+              lowStockThreshold: existingProduct.lowStockThreshold?.toString() || '',
+              weight: existingProduct.weight?.toString() || '',
+              dimensions: typeof existingProduct.dimensions === 'object' ? {
+                length: existingProduct.dimensions.length?.toString() || '',
+                breadth: existingProduct.dimensions.breadth?.toString() || '',
+                height: existingProduct.dimensions.height?.toString() || ''
+              } : {
+                length: '',
+                breadth: '',
+                height: ''
+              },
+              shippingClass: existingProduct.shippingClass || '',
+              hsn: existingProduct.hsn || '',
+              taxRate: existingProduct.taxRate?.toString() || '',
+              images: existingProduct.images?.map(img => typeof img === 'string' ? img : img.url) || [],
+              videos: [], // Videos not supported in current Product interface
+              featuredImage: '', // featuredImage not in current Product interface
+              variants: existingProduct.variants?.map(v => ({
+                name: v.name,
+                price: v.price?.toString() || '',
+                comparePrice: '', // comparePrice not in current variant interface
+                sku: v.sku || '',
+                stock: v.stock?.toString() || '',
+                weight: v.weight?.toString() || '',
+                inStock: v.stock > 0
+              })) || [],
+              isActive: existingProduct.isActive ?? true,
+              isFeatured: existingProduct.isFeatured ?? false,
+              requiresShipping: existingProduct.requiresShipping ?? true,
+              isTaxable: existingProduct.isTaxable ?? true,
+              slug: existingProduct.slug || '',
+              metaTitle: existingProduct.metaTitle || '',
+              metaDescription: existingProduct.metaDescription || '',
+              badges: existingProduct.badges || [],
+              materials: existingProduct.materials || '',
+              artist: existingProduct.artist || '',
+              careInstructions: existingProduct.careInstructions || '',
+              warranty: existingProduct.warranty || ''
+            });
+          } else {
             toast.error('Product not found');
             router.push('/admin/products');
           }
@@ -242,7 +264,7 @@ export default function EditProductPage() {
           router.push('/admin/products');
         }
       };
-      
+
       loadProduct();
     }
   }, [productId, router]);
@@ -316,22 +338,22 @@ export default function EditProductPage() {
       // Remove from uploaded images state
       const removedImages = uploadedImages.filter(img => imageIds.includes(img.id));
       setUploadedImages(prev => prev.filter(img => !imageIds.includes(img.id)));
-      
+
       // Remove from form data
       setFormData(prev => ({
         ...prev,
         images: prev.images.filter((_, index) => !imageIds.includes(uploadedImages[index]?.id || ''))
       }));
-      
+
       // Delete from Firebase Storage
       const { ImageUploadService } = await import('@/lib/imageUpload');
-      
+
       try {
         await ImageUploadService.deleteImagesFromUrls(removedImages.map(img => img.url));
       } catch (deleteError) {
         console.warn('Some images failed to delete from storage:', deleteError);
       }
-      
+
       toast.success('Images removed successfully');
     } catch (error) {
       console.error('Error removing images:', error);
@@ -342,7 +364,7 @@ export default function EditProductPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-    
+
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
@@ -378,14 +400,14 @@ export default function EditProductPage() {
   const handleAddVariant = () => {
     setFormData(prev => ({
       ...prev,
-      variants: [...prev.variants, { 
-        name: '', 
-        price: '', 
-        comparePrice: '', 
-        sku: '', 
-        stock: '', 
-        weight: '', 
-        inStock: true 
+      variants: [...prev.variants, {
+        name: '',
+        price: '',
+        comparePrice: '',
+        sku: '',
+        stock: '',
+        weight: '',
+        inStock: true
       }]
     }));
   };
@@ -393,7 +415,7 @@ export default function EditProductPage() {
   const handleVariantChange = (index: number, field: string, value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
-      variants: prev.variants.map((variant, i) => 
+      variants: prev.variants.map((variant, i) =>
         i === index ? { ...variant, [field]: value } : variant
       )
     }));
@@ -424,11 +446,11 @@ export default function EditProductPage() {
 
   const handleRemoveImageUrl = async (index: number) => {
     const imageUrl = formData.images[index];
-    
+
     try {
       // Import ImageUploadService dynamically to avoid SSR issues
       const { ImageUploadService } = await import('@/lib/imageUpload');
-      
+
       // Check if this is a Firebase Storage URL and delete from storage
       if (imageUrl && ImageUploadService.extractStoragePathFromUrl(imageUrl)) {
         try {
@@ -441,13 +463,13 @@ export default function EditProductPage() {
       } else {
         toast.success('Image URL removed');
       }
-      
+
       // Remove from form data
       setFormData(prev => ({
         ...prev,
         images: prev.images.filter((_, i) => i !== index)
       }));
-      
+
     } catch (error) {
       console.error('Error removing image:', error);
       toast.error('Failed to remove image');
@@ -471,20 +493,20 @@ export default function EditProductPage() {
 
     try {
       const { ImageUploadService } = await import('@/lib/imageUpload');
-      
+
       // Delete all images from Firebase Storage
       await ImageUploadService.deleteImagesFromUrls(formData.images);
-      
+
       // Clear from form data
       setFormData(prev => ({
         ...prev,
         images: [],
         featuredImage: ''
       }));
-      
+
       // Clear uploaded images
       setUploadedImages([]);
-      
+
       toast.success('All images cleared and deleted from storage');
     } catch (error) {
       console.error('Error clearing images:', error);
@@ -495,7 +517,7 @@ export default function EditProductPage() {
   // Enhanced submit function with Firebase integration
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       toast.error('Please fix the validation errors');
       return;
@@ -506,7 +528,7 @@ export default function EditProductPage() {
     try {
       // Generate SKU if not provided
       const sku = formData.sku || `${formData.category.substring(0, 3).toUpperCase()}-${Date.now()}`;
-      
+
       // Generate slug if not provided
       const slug = formData.slug || formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
@@ -527,9 +549,15 @@ export default function EditProductPage() {
         productType: formData.productType,
         stock: parseInt(formData.stock) || 0,
         lowStockThreshold: parseInt(formData.lowStockThreshold) || 5,
-        weight: formData.weight,
-        dimensions: formData.dimensions,
+        weight: parseFloat(formData.weight) || 0,
+        dimensions: {
+          length: parseFloat(formData.dimensions.length) || 0,
+          breadth: parseFloat(formData.dimensions.breadth) || 0,
+          height: parseFloat(formData.dimensions.height) || 0
+        },
         shippingClass: formData.shippingClass,
+        hsn: formData.hsn,
+        taxRate: parseFloat(formData.taxRate) || 0,
         images: formData.images.map((url, index) => ({
           id: `img-${index}`,
           url,
@@ -577,12 +605,12 @@ export default function EditProductPage() {
           sku: variant.sku
         }))
       };
-      
+
       // Update product in Firebase
       await productService.update(productId, firebaseProductData);
-      
+
       console.log('Product updated in Firebase successfully');
-      
+
       toast.success('Product updated successfully!');
       router.push('/admin/products');
     } catch (error) {
@@ -596,11 +624,11 @@ export default function EditProductPage() {
   // Save as draft function
   const handleSaveDraft = async () => {
     setIsSavingDraft(true);
-    
+
     try {
       // Generate SKU if not provided
       const sku = formData.sku || `${formData.category.substring(0, 3).toUpperCase()}-${Date.now()}`;
-      
+
       // Generate slug if not provided
       const slug = formData.slug || formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
@@ -620,9 +648,15 @@ export default function EditProductPage() {
         productType: formData.productType,
         stock: parseInt(formData.stock) || 0,
         lowStockThreshold: parseInt(formData.lowStockThreshold) || 5,
-        weight: formData.weight,
-        dimensions: formData.dimensions,
+        weight: parseFloat(formData.weight) || 0,
+        dimensions: {
+          length: parseFloat(formData.dimensions.length) || 0,
+          breadth: parseFloat(formData.dimensions.breadth) || 0,
+          height: parseFloat(formData.dimensions.height) || 0
+        },
         shippingClass: formData.shippingClass,
+        hsn: formData.hsn,
+        taxRate: parseFloat(formData.taxRate) || 0,
         images: formData.images.map((url, index) => ({
           id: `img-${Date.now()}-${index}`,
           url,
@@ -650,7 +684,7 @@ export default function EditProductPage() {
         warranty: formData.warranty,
         status: 'draft' as const
       };
-      
+
       // Save draft to Firebase
       await productService.update(productId, productData);
       toast.success('Draft saved successfully!');
@@ -674,7 +708,7 @@ export default function EditProductPage() {
   return (
     <div className="flex h-screen bg-gray-50">
       <AdminSidebar />
-      
+
       <div className="flex-1 lg:ml-64">
         <div className="p-6">
           {/* Header */}
@@ -682,7 +716,7 @@ export default function EditProductPage() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="flex items-center space-x-3 mb-2">
-                  <Link 
+                  <Link
                     href="/admin/products"
                     className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
                   >
@@ -697,7 +731,7 @@ export default function EditProductPage() {
                   Update your product information and media
                 </p>
               </div>
-              
+
               {/* Action Buttons */}
               <div className="flex items-center space-x-3">
                 <button
@@ -731,7 +765,7 @@ export default function EditProductPage() {
           {/* Form */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200">
             {/* Tab Navigation */}
-            <div className="border-b border-gray-200">
+            <div className="sticky top-16 z-20 bg-white border-b border-gray-200 rounded-t-xl">
               <nav className="flex space-x-8 px-6 overflow-x-auto" aria-label="Tabs">
                 {tabs.map((tab) => {
                   const Icon = tab.icon;
@@ -760,7 +794,7 @@ export default function EditProductPage() {
               <div className="mb-4 p-2 bg-gray-100 rounded text-xs">
                 Active Tab: {activeTab} | Total Tabs: {tabs.length}
               </div>
-              
+
               {/* Basic Information Tab */}
               {activeTab === 'basic' && (
                 <div className="space-y-6">
@@ -779,9 +813,8 @@ export default function EditProductPage() {
                           name="name"
                           value={formData.name}
                           onChange={handleInputChange}
-                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
-                            validationErrors.name ? 'border-red-300' : 'border-gray-300'
-                          }`}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${validationErrors.name ? 'border-red-300' : 'border-gray-300'
+                            }`}
                           placeholder="e.g., Handcrafted Silver Necklace"
                           required
                         />
@@ -789,7 +822,7 @@ export default function EditProductPage() {
                           <p className="text-red-600 text-sm mt-1">{validationErrors.name}</p>
                         )}
                       </div>
-                      
+
                       <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Short Description *
@@ -799,9 +832,8 @@ export default function EditProductPage() {
                           value={formData.shortDescription}
                           onChange={handleInputChange}
                           rows={2}
-                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
-                            validationErrors.shortDescription ? 'border-red-300' : 'border-gray-300'
-                          }`}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${validationErrors.shortDescription ? 'border-red-300' : 'border-gray-300'
+                            }`}
                           placeholder="Brief description for product cards and search results"
                         />
                         {validationErrors.shortDescription && (
@@ -818,9 +850,8 @@ export default function EditProductPage() {
                           value={formData.description}
                           onChange={handleInputChange}
                           rows={6}
-                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
-                            validationErrors.description ? 'border-red-300' : 'border-gray-300'
-                          }`}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${validationErrors.description ? 'border-red-300' : 'border-gray-300'
+                            }`}
                           placeholder="Tell a story about your product. Include features, benefits, and what makes it special."
                         />
                         {validationErrors.description && (
@@ -836,9 +867,8 @@ export default function EditProductPage() {
                           name="category"
                           value={formData.category}
                           onChange={handleInputChange}
-                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
-                            validationErrors.category ? 'border-red-300' : 'border-gray-300'
-                          }`}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${validationErrors.category ? 'border-red-300' : 'border-gray-300'
+                            }`}
                           required
                         >
                           <option value="">Select category</option>
@@ -909,15 +939,15 @@ export default function EditProductPage() {
                       <Upload className="h-5 w-5 mr-2" />
                       Media & Content
                     </h3>
-                    
+
                     {/* Product Images */}
                     <div className="mb-6">
                       <h4 className="text-md font-medium text-gray-900 mb-3">Product Images *</h4>
-                      
+
                       {validationErrors.images && (
                         <p className="text-red-600 text-sm mb-2">{validationErrors.images}</p>
                       )}
-                      
+
                       <ImageUploader
                         productId={formData.sku || productId}
                         category={formData.category || 'general'}
@@ -929,11 +959,11 @@ export default function EditProductPage() {
                         showThumbnails={true}
                         className="mb-4"
                       />
-                      
+
                       {/* Image URL Management */}
                       <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                         <h5 className="text-sm font-medium text-gray-900 mb-3">Add Image URLs</h5>
-                        
+
                         <div className="flex gap-2 mb-3">
                           <input
                             type="url"
@@ -969,25 +999,24 @@ export default function EditProductPage() {
                                       }}
                                     />
                                   </div>
-                                  
+
                                   {/* Featured Badge */}
                                   {formData.featuredImage === imageUrl && (
                                     <div className="absolute top-1 left-1 bg-yellow-500 text-white text-xs px-1 rounded">
                                       Featured
                                     </div>
                                   )}
-                                  
+
                                   {/* Action Buttons */}
                                   <div className="flex justify-between items-center">
                                     <div className="flex space-x-1">
                                       <button
                                         type="button"
                                         onClick={() => handleSetFeaturedImage(imageUrl)}
-                                        className={`p-1 rounded-full text-xs ${
-                                          formData.featuredImage === imageUrl 
-                                            ? 'bg-yellow-500 text-white' 
-                                            : 'bg-gray-200 text-gray-600 hover:bg-yellow-100'
-                                        }`}
+                                        className={`p-1 rounded-full text-xs ${formData.featuredImage === imageUrl
+                                          ? 'bg-yellow-500 text-white'
+                                          : 'bg-gray-200 text-gray-600 hover:bg-yellow-100'
+                                          }`}
                                         title="Set as featured"
                                       >
                                         <Star className="h-3 w-3" />
@@ -1003,7 +1032,7 @@ export default function EditProductPage() {
                                     </div>
                                     <span className="text-xs text-gray-500">#{index + 1}</span>
                                   </div>
-                                  
+
                                   {/* URL Preview */}
                                   <p className="text-xs text-gray-500 mt-1 truncate" title={imageUrl}>
                                     {imageUrl.length > 30 ? `${imageUrl.substring(0, 30)}...` : imageUrl}
@@ -1017,7 +1046,7 @@ export default function EditProductPage() {
                         {/* Action Buttons */}
                         <div className="flex gap-2 mt-3">
 
-                          
+
                           {formData.images.length > 0 && (
                             <button
                               type="button"
@@ -1084,9 +1113,8 @@ export default function EditProductPage() {
                           name="price"
                           value={formData.price}
                           onChange={handleInputChange}
-                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
-                            validationErrors.price ? 'border-red-300' : 'border-gray-300'
-                          }`}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${validationErrors.price ? 'border-red-300' : 'border-gray-300'
+                            }`}
                           placeholder="0.00"
                           min="0"
                           step="0.01"
@@ -1106,9 +1134,8 @@ export default function EditProductPage() {
                           name="comparePrice"
                           value={formData.comparePrice}
                           onChange={handleInputChange}
-                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
-                            validationErrors.comparePrice ? 'border-red-300' : 'border-gray-300'
-                          }`}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${validationErrors.comparePrice ? 'border-red-300' : 'border-gray-300'
+                            }`}
                           placeholder="0.00"
                           min="0"
                           step="0.01"
@@ -1159,9 +1186,8 @@ export default function EditProductPage() {
                           name="stock"
                           value={formData.stock}
                           onChange={handleInputChange}
-                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
-                            validationErrors.stock ? 'border-red-300' : 'border-gray-300'
-                          }`}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${validationErrors.stock ? 'border-red-300' : 'border-gray-300'
+                            }`}
                           placeholder="0"
                           min="0"
                         />
@@ -1202,16 +1228,40 @@ export default function EditProductPage() {
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Dimensions
+                          Dimensions (cm)
                         </label>
-                        <input
-                          type="text"
-                          name="dimensions"
-                          value={formData.dimensions}
-                          onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                          placeholder="e.g., 10cm x 5cm x 2cm"
-                        />
+                        <div className="grid grid-cols-3 gap-2">
+                          <input
+                            type="text"
+                            placeholder="L"
+                            value={formData.dimensions.length}
+                            onChange={(e) => setFormData(prev => ({
+                              ...prev,
+                              dimensions: { ...prev.dimensions, length: e.target.value }
+                            }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                          />
+                          <input
+                            type="text"
+                            placeholder="B"
+                            value={formData.dimensions.breadth}
+                            onChange={(e) => setFormData(prev => ({
+                              ...prev,
+                              dimensions: { ...prev.dimensions, breadth: e.target.value }
+                            }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                          />
+                          <input
+                            type="text"
+                            placeholder="H"
+                            value={formData.dimensions.height}
+                            onChange={(e) => setFormData(prev => ({
+                              ...prev,
+                              dimensions: { ...prev.dimensions, height: e.target.value }
+                            }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1235,7 +1285,7 @@ export default function EditProductPage() {
                         <Plus className="h-4 w-4 mr-2" />
                         Add Variant
                       </button>
-                      
+
                       {formData.variants.map((variant, index) => (
                         <div key={index} className="border border-gray-200 rounded-lg p-4">
                           <div className="flex items-center justify-between mb-4">
@@ -1371,6 +1421,36 @@ export default function EditProductPage() {
                         </select>
                       </div>
 
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          HSN Code
+                        </label>
+                        <input
+                          type="text"
+                          name="hsn"
+                          value={formData.hsn}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                          placeholder="e.g., 7113"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Tax Rate (%)
+                        </label>
+                        <input
+                          type="number"
+                          name="taxRate"
+                          value={formData.taxRate}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                          placeholder="e.g., 3"
+                          min="0"
+                          step="0.01"
+                        />
+                      </div>
+
                       <div className="space-y-4">
                         <div className="flex items-center">
                           <input
@@ -1384,7 +1464,7 @@ export default function EditProductPage() {
                             Requires shipping
                           </label>
                         </div>
-                        
+
                         <div className="flex items-center">
                           <input
                             type="checkbox"
@@ -1534,43 +1614,43 @@ export default function EditProductPage() {
                   <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <p className="text-yellow-800">Tab "{activeTab}" not found. Showing all tabs:</p>
                   </div>
-                  
+
                   {/* Basic Information Tab */}
                   <div className="space-y-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
                     <p className="text-gray-600">Basic information tab content would go here.</p>
                   </div>
-                  
+
                   {/* Pricing & Inventory Tab */}
                   <div className="space-y-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Pricing & Inventory</h3>
                     <p className="text-gray-600">Pricing and inventory tab content would go here.</p>
                   </div>
-                  
+
                   {/* Media & Content Tab */}
                   <div className="space-y-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Media & Content</h3>
                     <p className="text-gray-600">Media and content tab content would go here.</p>
                   </div>
-                  
+
                   {/* Variants Tab */}
                   <div className="space-y-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Variants</h3>
                     <p className="text-gray-600">Product variants tab content would go here.</p>
                   </div>
-                  
+
                   {/* Shipping & Tax Tab */}
                   <div className="space-y-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Shipping & Tax</h3>
                     <p className="text-gray-600">Shipping and tax tab content would go here.</p>
                   </div>
-                  
+
                   {/* SEO & Marketing Tab */}
                   <div className="space-y-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">SEO & Marketing</h3>
                     <p className="text-gray-600">SEO and marketing tab content would go here.</p>
                   </div>
-                  
+
                   {/* Product Badges Tab */}
                   <div className="space-y-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Badges</h3>
